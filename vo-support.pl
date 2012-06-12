@@ -19,7 +19,7 @@
 
 =head1 NAME
 
-vo-support - utility functions for VO support configuration
+vo-config - utility functions for VO support configuration
 
 =head1 VERSION
 
