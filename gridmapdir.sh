@@ -59,9 +59,9 @@ update_gridmapdir() {
     #             touch each poolname that doesn't exist for adding
     #             remove each poolname if link count = 1.
 
-    for fqan in `vo-support get-fqans $1` ; do
-	poolaccounts=`vo-support --fqan "$fqan" get-vo-param poolaccounts`
-	poolprefix=`vo-support --fqan "$fqan" get-vo-param poolprefix`
+    for fqan in `vo-config get-fqans $1` ; do
+	poolaccounts=`vo-config --fqan "$fqan" get-vo-param poolaccounts`
+	poolprefix=`vo-config --fqan "$fqan" get-vo-param poolprefix`
 	if [ $poolaccounts -gt 0 -a -n "$poolprefix" ]; then
 	    i=0
 	    while [ $i -lt $poolaccounts ]; do
