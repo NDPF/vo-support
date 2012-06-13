@@ -110,11 +110,11 @@ remove_trigger() {
     fi
 }
 
-vo_support() {
-    if [ -x "$scriptdir/vo-support" ]; then
-	"$scriptdir/vo-support" "$@"
+vo_config() {
+    if [ -x "$scriptdir/vo-config" ]; then
+	"$scriptdir/vo-config" "$@"
     else
-	echo "$scriptdir/vo-support is missing, aborted" >&2
+	echo "$scriptdir/vo-config is missing, aborted" >&2
 	exit 2
     fi
 }
