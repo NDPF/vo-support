@@ -72,7 +72,7 @@ supported VOs in /etc/vomses/. This information is used
 by voms-proxy-init to determine which VOMS service endpoint
 to contact.
 
-%description vomses
+%description gridmapdir
 This vo-support trigger installs gridmapdir entries
 for supported VOs in /etc/grid-security/gridmapdir. The VO
 configuration in /etc/vo-support/ lists the supported
@@ -89,7 +89,7 @@ make
 %install
 rm -rf $RPM_BUILD_ROOT
 
-%makeinstall
+make DESTDIR=$RPM_BUILD_ROOT install
 
 mkdir -p $RPM_BUILD_ROOT/%{_datadir}/%{name}/vos
 
@@ -99,6 +99,7 @@ rm -rf $RPM_BUILD_ROOT
 %files
 %defattr(-,root,root,-)
 %{_datadir}/%{name}/modules
+%{_sbindir}/vo-config
 %dir %{_datadir}/%{name}/vos
 %dir %{_datadir}/%{name}/triggers/install
 %dir %{_datadir}/%{name}/triggers/remove
@@ -177,6 +178,10 @@ fi
 
 
 %changelog
+* Wed Jun 13 2012 Dennis van Dok <dennisvd@nikhef.nl> 0.2-1
+- Added gridmapdir module and vo-config.pl script
+- Install the vo-config script in sbindir
+
 * Mon May 14 2012 Dennis van Dok <dennisvd@nikhef.nl> 0.1-1
 - Initial build.
 
