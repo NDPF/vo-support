@@ -32,10 +32,11 @@ DESTDIR =
 package = vo-support
 version = 0.2
 triggers = vomsdir.sh vomses.sh gridmapdir.sh
+triggersrc = vomsdir.sh vomses.sh gridmapdir.sh.in
 scripts = rpm-scriptlet-helpers.sh config-helpers.sh
 utils = vo-config
 utilssources = vo-config.pl
-distfiles = Makefile LICENSE vo-support.spec $(scripts) $(triggers) $(utilssources)
+distfiles = Makefile LICENSE vo-support.spec $(scripts) $(triggersrc) $(utilssources)
 
 .PHONY: install build installdirs install-scripts install-triggers
 
@@ -47,6 +48,10 @@ installdirs:
 	mkdir -p $(DESTDIR)/$(datadir)/vo-support/triggers/install
 	mkdir -p $(DESTDIR)/$(datadir)/vo-support/triggers/remove
 	mkdir -p $(DESTDIR)/$(sbindir)
+
+%: %.in
+	$(do_subst) $< > $@
+	chmod +x $@
 
 %: %.pl
 	$(do_subst) $< > $@
@@ -60,7 +65,7 @@ install-utils: installdirs $(utils)
 	    install -m 755 $$i $(DESTDIR)/$(sbindir)/ ; \
 	done
 
-install-triggers: installdirs
+install-triggers: installdirs $(triggers)
 	for i in $(triggers) ; do \
 	    install -m 755 $$i $(DESTDIR)/$(datadir)/vo-support/triggers/install/ ; \
 	    install -m 755 $$i $(DESTDIR)/$(datadir)/vo-support/triggers/remove/ ; \
