@@ -24,6 +24,7 @@
 # the relevant variables
 prefix = /usr
 datadir = $(prefix)/share
+sbindir =$(prefix)/sbin
 DESTDIR =
 
 # These variables should not be changed by the user
@@ -45,9 +46,10 @@ installdirs:
 	mkdir -p $(DESTDIR)/$(datadir)/$(package)/modules
 	mkdir -p $(DESTDIR)/$(datadir)/vo-support/triggers/install
 	mkdir -p $(DESTDIR)/$(datadir)/vo-support/triggers/remove
+	mkdir -p $(DESTDIR)/$(sbindir)
 
 %: %.pl
-	cp $< $@
+	$(do_subst) $< > $@
 	chmod +x $@
 
 install-scripts: installdirs
@@ -55,7 +57,7 @@ install-scripts: installdirs
 
 install-utils: installdirs $(utils)
 	for i in $(utils) ; do \
-	    install -m 755 $$i $(DESTDIR)/$(datadir)/$(package)/`echo $$i | sed 's/\..*//'` ; \
+	    install -m 755 $$i $(DESTDIR)/$(sbindir)/ ; \
 	done
 
 install-triggers: installdirs
@@ -71,3 +73,5 @@ dist:
 	mkdir -p _dist/$(package)-$(version)
 	install -m 644 $(distfiles) _dist/$(package)-$(version)
 	tar cCfz _dist $(package)-$(version).tar.gz $(package)-$(version)
+
+do_subst = sed -e 's,[@]sbindir@,$(sbindir),'
