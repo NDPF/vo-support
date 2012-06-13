@@ -34,8 +34,25 @@
 #
 # The remove-vo will uninstall these files.
 
+# installation variable
+sbindir=@sbindir@
+
+printusage() {
+    cat >&2 <<EOF
+Usage: $prg command [ VO ... ]
+
+Valid commands:
+
+ add-vo     add gridmapdir entries for given VOs
+     
+ remove-vo  remove gridmapdir entries for given VOs
+
+EOF
+}
+
 if [ $# -lt 1 ] ; then
     echo "$0 requires a command" >&2
+    printusage
     exit 1
 fi
 
@@ -59,9 +76,9 @@ update_gridmapdir() {
     #             touch each poolname that doesn't exist for adding
     #             remove each poolname if link count = 1.
 
-    for fqan in `vo-config get-fqans $1` ; do
-	poolaccounts=`vo-config --fqan "$fqan" get-vo-param poolaccounts`
-	poolprefix=`vo-config --fqan "$fqan" get-vo-param poolprefix`
+    for fqan in `${sbindir}/vo-config get-fqans $1` ; do
+	poolaccounts=`${sbindir}/vo-config "$fqan" get-vo-param poolaccounts`
+	poolprefix=`${sbindir}/vo-config "$fqan" get-vo-param poolprefix`
 	if [ $poolaccounts -gt 0 -a -n "$poolprefix" ]; then
 	    i=0
 	    while [ $i -lt $poolaccounts ]; do
@@ -98,6 +115,11 @@ case "$cmd" in
 	for vo in "$@" ; do
 	    update_gridmapdir $vo remove
 	done
+	;;
+    *)
+	echo "Unknown command $cmd" >&2
+	printusage
+	exit 1
 	;;
 esac
 
