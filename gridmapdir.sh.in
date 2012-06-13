@@ -77,8 +77,8 @@ update_gridmapdir() {
     #             remove each poolname if link count = 1.
 
     for fqan in `${sbindir}/vo-config get-fqans $1` ; do
-	poolaccounts=`${sbindir}/vo-config "$fqan" get-vo-param poolaccounts`
-	poolprefix=`${sbindir}/vo-config "$fqan" get-vo-param poolprefix`
+	poolaccounts=`${sbindir}/vo-config get-vo-param "$fqan" poolaccounts`
+	poolprefix=`${sbindir}/vo-config get-vo-param "$fqan" poolprefix`
 	if [ $poolaccounts -gt 0 -a -n "$poolprefix" ]; then
 	    i=0
 	    while [ $i -lt $poolaccounts ]; do
