@@ -24,15 +24,15 @@
 # the relevant variables
 prefix = /usr
 datadir = $(prefix)/share
-sbindir =$(prefix)/sbin
+sbindir = $(prefix)/sbin
 DESTDIR =
 
 # These variables should not be changed by the user
 
 package = vo-support
-version = 0.2
-triggers = vomsdir.sh vomses.sh gridmapdir.sh
-triggersrc = vomsdir.sh vomses.sh gridmapdir.sh.in
+version = 0.3
+triggers = vomsdir.sh vomses.sh gridmapdir.sh grid-mapfile.sh
+triggersrc = vomsdir.sh vomses.sh gridmapdir.sh.in grid-mapfile.sh.in
 scripts = rpm-scriptlet-helpers.sh config-helpers.sh
 utils = vo-config
 utilssources = vo-config.pl
@@ -49,9 +49,8 @@ installdirs:
 	mkdir -p $(DESTDIR)/$(datadir)/vo-support/triggers/remove
 	mkdir -p $(DESTDIR)/$(sbindir)
 
-%: %.in
+%.sh: %.sh.in
 	$(do_subst) $< > $@
-	chmod +x $@
 
 %: %.pl
 	$(do_subst) $< > $@

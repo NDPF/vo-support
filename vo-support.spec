@@ -17,7 +17,7 @@
 
 Summary: Virtual Organisation support for Grid services
 Name: vo-support
-Version: 0.2
+Version: 0.3
 Release: 1
 License: APL 2.0
 Group: System Environment/Base
@@ -38,6 +38,11 @@ Requires: %{name}
 
 %package gridmapdir
 Summary: Install gridmapdir entries for supported VOs
+Group: System Environment/Base
+Requires: %{name}
+
+%package gridmapfile
+Summary: Install gridmapfile entries for supported VOs
 Group: System Environment/Base
 Requires: %{name}
 
@@ -79,6 +84,13 @@ configuration in /etc/vo-support/ lists the supported
 FQANS, their pool prefixes and the number pool accounts
 to create.
 
+%description gridmapfile
+This vo-support trigger installs grid-mapfile and groupmapfile entries
+for supported VOs in /etc/grid-security/voms-grid-mapfile and
+/etc/grid-security/groupmapfile. The VO configuration in
+/etc/vo-support/ lists the supported FQANS, the pool prefixes
+and the group mapping to use.
+
 %prep
 %setup -q
 
@@ -118,6 +130,11 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(-,root,root,-)
 %{_datadir}/vo-support/triggers/install/gridmapdir.sh
 %{_datadir}/vo-support/triggers/remove/gridmapdir.sh
+
+%files gridmapfile
+%defattr(-,root,root,-)
+%{_datadir}/vo-support/triggers/install/grid-mapfile.sh
+%{_datadir}/vo-support/triggers/remove/grid-mapfile.sh
 
 
 %post vomsdir
@@ -176,8 +193,29 @@ if [ $1 -eq 0 ]; then
    fi
 fi
 
+%post gridmapfile
+# add all VOs currently supported
+if [ $1 -ge 1 ]; then
+   if [ -e /usr/share/vo-support/modules/rpm-scriptlet-helpers.sh ]; then
+      . /usr/share/vo-support/modules/rpm-scriptlet-helpers.sh
+      add_trigger grid-mapfile.sh
+   fi
+fi
+
+%preun gridmapfile
+# remove all VOs currently supported
+if [ $1 -eq 0 ]; then
+   if [ -e /usr/share/vo-support/modules/rpm-scriptlet-helpers.sh ]; then
+      . /usr/share/vo-support/modules/rpm-scriptlet-helpers.sh
+      remove_trigger grid-mapfile.sh
+   fi
+fi
+
 
 %changelog
+* Tue Jun 19 2012 Dennis van Dok <dennisvd@nikhef.nl> 0.3-1
+- Added new grid-mapfile trigger
+
 * Wed Jun 13 2012 Dennis van Dok <dennisvd@nikhef.nl> 0.2-1
 - Added gridmapdir module and vo-config.pl script
 - Install the vo-config script in sbindir

@@ -164,6 +164,7 @@ SWITCH: {
     print get_vo_param($vo, $fqan, $param) . "\n";
     last SWITCH;
   };
+
   print STDERR "unsupported command $command.";
   print_usage();
   die;

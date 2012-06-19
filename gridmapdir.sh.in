@@ -79,6 +79,8 @@ update_gridmapdir() {
     for fqan in `${sbindir}/vo-config get-fqans $1` ; do
 	poolaccounts=`${sbindir}/vo-config get-vo-param "$fqan" poolaccounts`
 	poolprefix=`${sbindir}/vo-config get-vo-param "$fqan" poolprefix`
+	test "$poolaccounts" != undefined || continue
+	test "$poolprefix" != undefined || continue
 	if [ $poolaccounts -gt 0 -a -n "$poolprefix" ]; then
 	    i=0
 	    while [ $i -lt $poolaccounts ]; do
