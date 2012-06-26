@@ -173,7 +173,11 @@ SWITCH: {
     }
     my $vo = $ARGV[1];
     check_voname($vo);
-    print join " ", $voconf->get_fqans($vo);
+    my $fqans = $voconf->get_fqans($vo) or do {
+      print STDERR "$_\n" foreach $voconf->errmsg;
+      exit 2;
+    };
+    print join " ", $fqans;
     print "\n";
     last SWITCH;
   };
@@ -193,7 +197,10 @@ SWITCH: {
     }
     check_voname($vo);
     my $val = $voconf->get_vo_param($vo, $param, $fqan);
-    if (! defined $val) { $val = "undefined"; $exitval = 1; }
+    if (! defined $val) { 
+      print STDERR "$_\n" foreach $voconf->errmsg;
+      $val = "undefined"; $exitval = 1;
+    }
     print $val . "\n";
     last SWITCH;
   };
