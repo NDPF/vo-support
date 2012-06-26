@@ -66,6 +66,9 @@ shift
 
 # $1 = VO
 # $2 = add/remove
+# FIXME: the mappings for /pvier also need to be replicated for
+# /pvier/Role=Null/Capability=Null because of some legacy software
+# support.
 update_mapfiles() {
     for fqan in `${sbindir}/vo-config get-fqans $1` ; do
 	poolprefix=`${sbindir}/vo-config get-vo-param "$fqan" poolprefix`
