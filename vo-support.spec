@@ -29,22 +29,22 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 %package vomsdir
 Summary: Generate vomsdir data for supported VOs
 Group: System Environment/Base
-Requires: %{name}
+Requires: %{name} = %{version}-%{release}
 
 %package vomses
 Summary: Install vomses information for supported VOs
 Group: System Environment/Base
-Requires: %{name}
+Requires: %{name} = %{version}-%{release}
 
 %package gridmapdir
 Summary: Install gridmapdir entries for supported VOs
 Group: System Environment/Base
-Requires: %{name}
+Requires: %{name} = %{version}-%{release}
 
 %package gridmapfile
 Summary: Install gridmapfile entries for supported VOs
 Group: System Environment/Base
-Requires: %{name}
+Requires: %{name} = %{version}-%{release}
 
 %description
 Virtual Organisations (VOs) are groups of people, often research
