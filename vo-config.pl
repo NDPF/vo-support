@@ -173,8 +173,7 @@ SWITCH: {
     }
     my $vo = $ARGV[1];
     check_voname($vo);
-    my @fqans = $voconf->get_fqans($vo);
-    if (!defined @fqans) {
+    my @fqans = $voconf->get_fqans($vo) or do {
       print STDERR "$_\n" foreach $voconf->errmsg;
       exit 2;
     };
