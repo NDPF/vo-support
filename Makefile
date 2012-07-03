@@ -47,6 +47,7 @@ installdirs:
 	mkdir -p $(DESTDIR)/$(datadir)/$(package)/modules
 	mkdir -p $(DESTDIR)/$(datadir)/vo-support/triggers/install
 	mkdir -p $(DESTDIR)/$(datadir)/vo-support/triggers/remove
+	mkdir -p $(DESTDIR)/$(datadir)/man/man1
 	mkdir -p $(DESTDIR)/$(sbindir)
 
 %.sh: %.sh.in
@@ -55,6 +56,11 @@ installdirs:
 %: %.pl.in
 	$(do_subst) $< > $@
 	chmod +x $@
+
+install-mans: installdirs $(utils)
+	for i in $(utils) ; do \
+	    pod2man -c "VO SUPPORT" $$i $(DESTDIR)/$(datadir)/man/man1/$$i.1 ; \
+	done
 
 install-scripts: installdirs
 	install -m 644 rpm-scriptlet-helpers.sh $(DESTDIR)/$(datadir)/$(package)/modules/
@@ -70,7 +76,7 @@ install-triggers: installdirs $(triggers)
 	    install -m 755 $$i $(DESTDIR)/$(datadir)/vo-support/triggers/remove/ ; \
 	done
 
-install: install-scripts install-utils install-triggers
+install: install-scripts install-utils install-triggers install-mans
 
 dist:
 	rm -rf _dist/
