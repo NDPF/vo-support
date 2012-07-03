@@ -30,7 +30,7 @@ DESTDIR =
 # These variables should not be changed by the user
 
 package = vo-support
-version = 0.3
+version = 0.4
 triggers = vomsdir.sh vomses.sh gridmapdir.sh grid-mapfile.sh
 triggersrc = vomsdir.sh vomses.sh gridmapdir.sh.in grid-mapfile.sh.in
 scripts = rpm-scriptlet-helpers.sh config-helpers.sh
