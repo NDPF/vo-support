@@ -34,8 +34,8 @@ version = 0.3
 triggers = vomsdir.sh vomses.sh gridmapdir.sh grid-mapfile.sh
 triggersrc = vomsdir.sh vomses.sh gridmapdir.sh.in grid-mapfile.sh.in
 scripts = rpm-scriptlet-helpers.sh config-helpers.sh
-utils = vo-config
-utilssources = vo-config.pl
+utils = vo-config vo-support
+utilssources = vo-config.pl.in vo-support.pl.in
 distfiles = Makefile LICENSE vo-support.spec $(scripts) $(triggersrc) $(utilssources)
 
 .PHONY: install build installdirs install-scripts install-triggers
@@ -52,7 +52,7 @@ installdirs:
 %.sh: %.sh.in
 	$(do_subst) $< > $@
 
-%: %.pl
+%: %.pl.in
 	$(do_subst) $< > $@
 	chmod +x $@
 
@@ -78,4 +78,5 @@ dist:
 	install -m 644 $(distfiles) _dist/$(package)-$(version)
 	tar cCfz _dist $(package)-$(version).tar.gz $(package)-$(version)
 
-do_subst = sed -e 's,[@]sbindir@,$(sbindir),'
+do_subst = sed -e 's,[@]sbindir@,$(sbindir),' \
+               -e 's,[@]datadir@,$(datadir),'
