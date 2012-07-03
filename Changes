@@ -1,0 +1,28 @@
+Revision history for vo-support
+
+0.4     2012-07-03 16:00
+
+	Unreleased.
+	update substitutions to replace datadir in perl scripts
+	Add the vo-support utility with basic functions for listing
+	VOs, triggers.
+	better error handling for vo-config.pl
+	Added pod documentation
+	use Pod::Usage
+	use Site::Configuration::VO
+	Some sanity checking
+
+0.3     2012-06-19 12:52
+
+	Unreleased.	
+	Includes grid-mapfile trigger
+	install vo-config in sbindir
+	rename vo-support script to vo-config
+
+0.2     2012-06-12 16:19
+
+	Unreleased version of vo-config package.
+	Includes a basic Makefile.
+	vo-config: Helper script to retrieve VO configuration settings
+
+0.1     Unreleased
