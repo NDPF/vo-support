@@ -36,7 +36,7 @@ triggersrc = vomsdir.sh vomses.sh gridmapdir.sh.in grid-mapfile.sh.in
 scripts = rpm-scriptlet-helpers.sh config-helpers.sh
 utils = vo-config vo-support
 utilssources = vo-config.pl.in vo-support.pl.in
-distfiles = Makefile LICENSE vo-support.spec $(scripts) $(triggersrc) $(utilssources)
+distfiles = Makefile LICENSE Changes vo-support.spec $(scripts) $(triggersrc) $(utilssources)
 
 .PHONY: install build installdirs install-scripts install-triggers
 
