@@ -1,0 +1,250 @@
+#!/usr/bin/perl -w
+
+# Copyright 2012 Stichting FOM
+#
+#     Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# This program implements a set of utility functions that may be
+# used by maintainer scripts for VO support purposes
+
+=head1 NAME
+
+vo-support - manage virtual organisation configuration
+
+=head1 SYNOPSIS
+
+vo-config [ B<options> ] command I<arguments>
+
+=cut
+
+use strict;
+use Getopt::Long;
+use Pod::Usage;
+use Site::Configuration::VO;
+
+sub notimpl;
+sub listvos;
+
+my $debug = 0;
+my $help = 0;
+my $vo = "";
+my $fqan = "";
+
+my $confdir = "/etc/vo-support";
+my $datadir = @datadir@;
+my $vodatadir = "/usr/share/vo-support/vos"; # TODO: make this configurable
+
+
+=head2 Commands
+
+=over
+
+=item list-vos
+
+List installed and configured Virtual Organisations
+
+=item list-triggers
+
+List installed actions to automatically run for each VO
+
+=item run-trigger I<trigger>
+
+Run a trigger action for all installed VOs.
+
+=back
+
+=cut
+
+# The list of commands that this program understands. The keys of the
+# hash are the commands as entered by the caller, the values are the names
+# of the subroutines to call.
+my %commands = ("list-vos" => \&listvos,
+		"list-triggers" => \&notimpl,
+		"run-trigger" => \&notimpl
+	       );
+
+=item2 Options
+
+=over
+
+=item B<-d>, B<--debug>
+
+Enter debugging mode.
+
+=item B<-h>, B<--help>
+
+Show extended help text.
+
+=back
+
+=cut
+
+GetOptions("debug" => \$debug,
+	   "help" => \$help) or do {
+  pod2usage("Error parsing command line options.\n");
+};
+
+if ($help) {
+  pod2usage(-verbose => 2, -exitval => 0);
+}
+
+my $voconf = Site::Configuration::VO->new();
+
+if ($debug) {
+  print STDERR "Entering debugging mode. Configuration read from current directory.\n";
+  $confdir = ".";
+  $voconf->confdir(".");
+  $vodatadir = "./vos";
+}
+
+my $command = $ARGV[0] or do {
+  pod2usage("$0 requires a command.\n");
+};
+
+if (defined $commands{$command}) {
+  &{$commands{$command}}(@ARGV);
+} else {
+  print STDERR "Command '$command' is unknown.\n";
+}
+
+=head1 DESCRIPTION
+
+This utility interacts with the installed and configured Virtual Organisations (VOs)
+on the system, and the special actions (triggers) that help to manage those
+parts of the system that relate to them. Normally these triggers are called at
+the right time by the system itself, for instance at the moment a VO package is
+installed and configured, but the system administrator may choose to run them
+at arbitrary times. In addition, this tool can report on the status of various
+parts of the VO support system.
+
+The VO support structure is maintained in two places:
+
+=over
+
+=item @datadir@/vo-support/
+
+This directory collects static information about the VOs which is not considered
+site-specific or configurable. In debugging mode, the current directory is used instead.
+Data for any specific VO is recorded in the subdirectory
+
+    ./vos/I<vo>/
+
+Adding support for an additional VO is usually just a matter of installing an additional
+package.
+
+=item /etc/vo-support/*.conf
+
+Each configured VO has a single file named after it. In debugging mode
+the current directory is used. For details on the structure of these
+files see L<vo-config>. These files contain site-local settings per
+VO, and may differ radically between sites depending on local policies
+and structure.
+
+=back
+
+Typically each VO should be present in both locations, but configuration of a VO is
+not easily automated through package management.
+
+The program accepts the following options:
+
+=over
+
+=item B<-d>, B<--debug>
+
+Enter debugging mode. The current working directory is used for the
+vo-support data directory as well as the vo-support configuration
+directory, so users can try out what some scripts would do without
+changing the system setup.
+
+=item B<-h>, B<--help>
+
+This option shows the extended help text (which you are reading right
+now, if you didn't find this helpful then your only hope is to read
+the source code).
+
+=back
+
+The program interprets the first non-option argument as the command to execute.
+
+The currently understood commands are as follows.
+
+=head2 list-vos
+
+List installed and configured virtual organisations. This briefly lists the directories
+in
+
+    @datadir@/vo-support/vos/
+
+and the .conf files in
+
+    /etc/vo-support/
+
+=cut
+
+# List all the VO
+sub listvos {
+  # list all the VOs in /usr/share/vo-support/vos
+  my @installedvos = <$vodatadir/*>;
+  print "Installed VOs in $vodatadir:\n\n";
+
+  for my $vodir (@installedvos) {
+    if (-d $vodir) {
+      $vodir =~ m{.*/([^/]*)};
+      print $1 . "\n";
+    }
+
+  }
+
+  # list all the VOs as configured in /etc/vo-support
+  my @configuredvos = </etc/vo-support/*.conf>;
+  print "\nConfigured VOs in /etc/vo-support/:\n\n";
+  for my $voconf (@configuredvos) {
+    $voconf =~ m{.*/([^/]*).conf$};
+    print $1 .  "\n";
+  }
+
+}
+
+
+=head2 list-triggers
+
+Lists the installed triggers in
+
+    @datadir@/vo-support/triggers/{install,remove}
+
+=cut
+
+sub listtriggers {
+  print "Install triggers:\n\n";
+  for my $trigger (<$datadir/triggers/install/*>) {
+    print $trigger =~ m{.*/triggers/(.*)};
+  }
+  print "Remove triggers:\n\n";
+  for my $trigger (<$datadir/triggers/install/*>) {
+    print $trigger =~ m{.*/triggers/(.*)};
+  }
+}
+
+
+
+=head2 run-trigger {install | remove} I<trigger>
+
+Run the specified trigger for all supported VOs.
+
+=cut
+
+sub notimpl {
+  my $command = shift;
+  print STDERR sprintf "The command '%s' is not implemented.\n", $command;
+  exit 1;
+}
