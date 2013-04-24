@@ -1,5 +1,13 @@
 Revision history for vo-support
 
+0.5    2013-04-24 12:20
+
+	Unreleased.
+	Add clean target to Makefile
+	Clean up of vo-support.pl
+	Use /etc/vo-support/vos for vo-specific configuration
+	Rename scriptlet helpers to maintainerscript-helpers
+
 0.4     2012-07-03 16:00
 
 	Unreleased.
