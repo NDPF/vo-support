@@ -140,7 +140,7 @@ my $help = 0;
 my $vo = "";
 my $fqan = "";
 
-my $confdir = "/etc/vo-support";
+my $confdir = "/etc/vo-support/vos";
 
 GetOptions("debug" => \$debug,
 	   "help" => \$help) or do {

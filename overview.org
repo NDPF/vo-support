@@ -1,0 +1,298 @@
+* Virtual Organisation support structure
+
+  Configuring a Grid Site is not a trivial task. Not only because
+  grid middleware is fairly complicated and less well known by
+  system admistrators, but also because it has a more indirect
+  idea about what 'users' are.
+
+  On traditional cluster systems, user accounts are kept either
+  locally (/etc/passwd) or in some networked way extending throughout
+  the organisation (such as Windows domains, LDAP, or NIS). For Grids
+  this no longer works. As research organisations collaborate
+  world-wide, their combined user base becomes too large to be 'known'
+  by any individual site. That is why a users are authenticated by
+  membership of so-called Virtual Organisations.
+
+  The translation from this 'membership card' to a locally known
+  entity involves a couple of technicalities and configuration
+  details. The vo-support packages provide the structure to ease the
+  installation and maintenance tasks of supporting VO users on
+  local systems.
+
+  This structure is organised as a collection of system packages
+  around a common set of scripts. The main reasons for this approach
+  are:
+
+  - package management is very robust and reliable,
+  - it integrates well with typical administrative tasks.
+
+  The purpose is to make VO configuration as easy as installing
+  the right packages and tweaking just a couple of configuration
+  files.
+
+** modules and VOs
+
+   One side of the support structure contains a bunch of modules,
+   where each module is responsible for a specific element. Typically
+   a module contains a configuration script that will run once for
+   each of the supported VOs.
+
+   On the other side there are the individual VO packages, that
+   contain some site-independent data for a single VO. To support
+   a VO at a site requires the installation of its package.
+
+   The selection of VO packages decides which VOs will be allowed to
+   use the site's services. The selection of modules decides what this
+   means for certain pieces of middleware. These two choices together
+   should be sufficient to handle all VO related configuration on a
+   system.
+
+
+** Modules
+
+   The following modules are common VO-related configuration tasks. They
+   sometimes require additional, site-local configuration.
+
+*** vomsdir
+
+    Each supported VO has a directory in /etc/grid-security/vomsdir,
+    which contains the so-called LSC files. Each file contains the
+    X.509 DNs of the host and CA(s) of one of the VO's VOMS
+    servers. This data is required to verify the VOMS attributes which
+    come with a user's security token. The LSC files are static, and
+    provided by the individual VO packages.
+
+*** vomses
+
+    The /etc/vomses directory contain VOMS server connection
+    data per VO, as used by the VOMS utilities. This data is also static
+    and provided by the individual VO packages.
+
+*** grid-mapfile
+
+    The /etc/grid-security directory contains a couple
+    of files that establish the mapping between the FQANs (Fully
+    Qualified Attribute Names) as found in user security tokens and
+    the local user, pool account, and local group.
+
+    The related settings are site-local and found in each individual VO
+    configuration file, per FQAN section.
+    
+*** gridmapdir
+
+    Pool accounts are generic user accounts with a common
+    prefix and a numeric suffix. Users that are mapped to a pool will
+    be allotted a free account from the pool, and this fact is
+    recorded in the gridmapdir by making a link between files named
+    after the pool account and the user's DN.
+
+    The use of pool accounts is a site-local matter, and relates to the
+    grid-mapfile; the amount of pool accounts to use and the pool prefix
+    is set in the local configuration files.
+
+** VO configuration and FQANs
+
+   The site-specific details for VO support are expressed in
+   configuration files, one per VO, in /etc/vo-support/. These files
+   are named <vo>.conf and are in INI file format, with sections for
+   each FQAN. Settings that are global to the VO go in the top section
+   called [DEFAULT], but this section header may be omitted. Any
+   settings preceding the first FQAN is considered to be in the
+   [DEFAULT] section.
+
+   : # example configuration file for pvier
+   : SoftwareDir = /data/esia/pvier
+   : DefaultSE = tbn18.nikhef.nl
+   : 
+   : [/pvier]
+   : poolaccounts = 30
+   : poolprefix = pvier
+   : groupmapping = pvier
+   : 
+   : [/pvier/Role=lcgadmin]
+   : poolprefix = pvsgm
+   : poolaccounts = 10
+
+
+
+** Triggers
+
+   The configuration modules are typically run for every VO when they
+   are installed, but they must also be (re)run when the selection of VOs
+   changes. This is taken care of by having a trigger for each module, that
+   is activated by the package maintainer scripts on installation and
+   removal of VO packages. The scriptlets are kept very simple. A typical
+   support module would contain this as the %post scriptlet in the RPM
+   module:
+
+   : if [ $1 -ge 1 ]; then
+   :    if [ -e /usr/share/vo-support/modules/rpm-scriptlet-helpers.sh ]; then
+   :       . /usr/share/vo-support/modules/rpm-scriptlet-helpers.sh
+   :       add_trigger my-module.sh
+   :    fi
+   : fi
+
+   And a typical VO package would have the following %post scriptlet:
+
+   : if [ $1 -ge 1 ]; then
+   :    if [ -e /usr/share/vo-support/modules/rpm-scriptlet-helpers.sh ]; then
+   :       . /usr/share/vo-support/modules/rpm-scriptlet-helpers.sh
+   :       add_vo pvier
+   :    fi
+   : fi
+
+   The rpm-scriptlet-helpers.sh module hides most of the implementation.
+   What happens when a VO is added, is that the list of triggers in
+   /usr/share/vo-support/triggers/install/ is inspected and each of
+   them is run in turn for the new VO. The removal of a VO is handled
+   similarly by the triggers in /usr/share/vo-support/triggers/remove/.
+
+
+   
+
+
+* Virtual Organisation support tasks				  :obsoleted:
+
+  The concept of Virtual Organisations has been well established as a
+  mechanism to form collections of people with a shared research
+  interest, such as a project or national program, for the purpose of
+  relating their affiliations in a trusted and reliable way to
+  computing facilities that support their specific program.
+
+  The sites that run such services need to authenticate incoming users
+  based on their VO membership, and apply local policies and
+  authorisation rules to ultimately fulfill the user's goals.
+
+  The local operating systems where these services are running often
+  have no knowledge of VO users and structures; a typical example is a
+  common batch system furbished with a VO-aware front-ends. The batch
+  system schedules users according to their local user IDs and group
+  IDs, so a translation (or mapping) of VO data to local data is
+  required.
+
+  The method of localisation varies from site to site, but some common
+  patterns have gained foothold over the years. These have to be
+  set up and configured correctly on every site.
+
+  - vomsdir: each supported VO has a directory in
+    /etc/grid-security/vomsdir, which contains the so-called LSC
+    files. Each file contains the X.509 DNs of the host and CA(s) of
+    one of the VO's VOMS servers. This data is required to verify the
+    VOMS attributes which come with a user's security token.
+
+  - vomses: the /etc/vomses directory contain VOMS server connection
+    data per VO, as used by the VOMS utilities.
+
+  - grid-mapfile: the /etc/grid-security directory contains a couple
+    of files that establish the mapping between the FQANs (Fully
+    Qualified Attribute Names) as found in user security tokens and
+    the local user, pool account, and local group.
+
+  - gridmapdir: pool accounts are generic user accounts with a common
+    prefix and a numeric suffix. Users that are mapped to a pool will
+    be allotted a free account from the pool, and this fact is
+    recorded in the gridmapdir by making a link between files named
+    after the pool account and the user's DN.
+
+  Configuring these files and directories is error prone and tedious
+  when done manually, so some form of automation is needed. 
+
+** Current solutions
+
+   Up until now, there has been only one complete solution to
+   configuring these files. A utility called YAIM (Yet Another Install
+   Manager), which came into being as a indispensible tool for installing
+   and configuring the complicated and interdependent grid middleware
+   of the early days. Later, the installation component was dropped in
+   favour of plain package management, which had much improved, but the
+   configuration part still remains.
+
+   The way YAIM works is that after all packages are installed, an
+   abstract description of the site configuration is prepared by
+   setting a number of shell variables in a single file, and running
+   the YAIM utility with this file and a list of node types to
+   configure. Each node type lists a series of shell scripts to run,
+   and these write the local configuration data for various
+   components.
+
+   This approach works, but it is not without its drawbacks.
+
+   - Portability. YAIM was developed with Red Hat systems in mind
+     and is not easily ported to other systems, where configuration
+     data may be slightly different.
+   - All-or-nothing. In order for YAIM to work it must make a full run
+     every time, including when only a few packages are upgraded.
+     This means some services may be restarted unnecessarily,
+     configuration files are rewritten with the same data, and the
+     system administrator must take care of running YAIM at the right
+     moments.
+   - Expressive power. The site information to relate to YAIM is
+     often of a structured nature, which is not easy to express
+     using plain shell variables. This result in overly long and
+     kludgy variable names.
+   - Detachment from local configuration. A site administrator
+     inspecting the configuration on a machine is looking at something
+     produced indirectly from another setting. Changes will be
+     overwritten on the next YAIM run.
+   - Unclear boundary of responsibility. It is not obvious where YAIM
+     should be at work, and what is best left to package management.
+     It is obvious YAIM is out of bounds in some places.
+
+** Proposed solution
+
+   The approach detailed below is based on the idea that software
+   packages should take care of their own configuration as much
+   as possible, and not helplessly rely on external tools to result
+   in a working system. There are a few situations where this is hard:
+
+   - the configuration depends on how the site as a whole is managed,
+     or other external factors outside the scope of the package maintainer
+     scripts;
+   - there is no clear ownership of configuration data when it is shared
+     among several interdependent packages.
+
+   One way to handle these difficulties is by introducing additional
+   packages to relate the site global settings to a local structure
+   that can be processed by package maintainer scripts, and from which
+   the shared configuration may be generated. This all sounds a bit
+   vague, and care must be taken not to fall into the same trap as
+   YAIM, going out of bounds with respect to its responsibilities.
+   The concrete examples below show exactly how these responsibilities
+   are distributed.
+
+*** Example: a package to handle the gridmapdir
+
+    If a site makes use pool accounts as described above, there should
+    be a package that takes care of creating the right entries in
+    /etc/grid-security/gridmapdir/. By 'entries' we mean empty files that
+    are named after each pool account; the actual generation of accounts
+    is still another package's responsibility (a site may have these things
+    provisioned centrally, e.g. through LDAP).
+
+    Consider for example thath the site's policy specifies that VO
+    'bar' should use pool prefix 'bar' and twenty pool accounts. Our
+    package should create these entries. But it must also create pool
+    account entries for all the other VOs the site supports. And if
+    additional VOs are added, our package must add entries for them as
+    well. If a VO is removed, our package should probably remove
+    related entries, at least those that are not currently in use.
+
+    All of these things should happen automatically, the question is: what
+    triggers it? The answer (not surprisingly): the package maintainer
+    scripts of each VO package.
+
+    Every VO should have it's own package, containing the static,
+    site-independent data of that VO (the LSC files and vomses
+    entries) and a little bit of scripting to run automatically on
+    installation and removal of the package.  Every modern package
+    management system has such facilities built-in. In Red-Hat-like
+    systems they're called %post and %postun in the SPEC file, in
+    Debian-like systems they're called postinst and postrm.
+    
+    The post-install action should go like this: "run every VO-related
+    module action for this new VO".
+
+    What if we install a new VO-related module package? It's much the
+    same: "run this module's action for every installed VO".
+
+    

@@ -1,0 +1,85 @@
+* vo-support
+  
+  This generic package contains the support structure for including all kinds of
+  individual VOs. The directories
+  : /usr/share/vo-support/triggers/install/
+  : /usr/share/vo-support/triggers/remove/
+  may be populated by all kinds of VO-related stuff; conceptually, the install directory
+  contains scripts to be run on installation of a new VO (installing a new module will
+  run the new install script on all VOs), and the remove directory similarly contains scripts
+  to be run on removal. 
+
+  Obtain the VoDump.xml file from the Operations Portal
+  http://operations-portal.egi.eu/xml/voIDCard/public/all/true
+
+** configuration
+
+   The vo-support package needs no configuration.
+
+
+** vo-support-biggrid-pvier
+
+   As an example package, this includes support for the pvier VO within Big Grid.
+
+*** contents
+
+    : /usr/share/vo-support/vo/pvier
+    It may contain: the VO VOID card (or a reference to it). The list of groups, roles
+    and capabilities. The LSC file (which contains the chain of DNs of the VO server up
+    to the issuing CA).
+
+*** configuration
+
+    A site must configure how to support the VOMS roles (FQANS) in
+    terms of account mappings and groups; this will be used by the
+    module that populates /etc/grid-security/voms-grid-mapfile
+    and /etc/grid-security/groupmapfile. This configuration probably should go
+    to
+    : /etc/vo-support/pvier.conf
+    which differs from the YAIM approach to aggregate all VOs in a single config.
+
+
+** vo-support-module-access-rules
+
+   Define a match between VOs and shares. The site has to define the access rules.
+   This translates to a configuration file in which is defined which FQANS
+   go with which 'shares' (or queues), and how FQANs translate to pool accounts
+   and groups. This could work much along the lines of the current YAIM modules.
+
+*** contents
+
+    : /usr/lib/vo-support/install/01access-rules
+
+    generate intermediate data for VOs in /var/lib/vo-support/data to be used by
+    other modules. Ordering of modules is important, as this should come before
+    the others.
+
+
+** vo-support-module-voms-mappings
+
+   This module populates the files
+   : /etc/grid-security/voms-grid-mapfile
+   : /etc/grid-security/groupmapfile
+   and possibly also
+   : /etc/grid-security/gridmapdir
+   according to the supported VOs.
+
+*** contents
+    
+    : /usr/lib/vo-support/install/voms-mapping
+
+    This script iterates over each vo in
+    : /usr/share/vo-support/vo/*
+    and checks its mapping configuration in
+    : /etc/vo-support/$vo.conf
+    to generate the above mapping files. The gridmapdir (for pool accounts)
+    may be populated as well (YAIM does this conditionally).
+
+*** configuration
+
+    possible configuration settings:
+    - whether or not to populate the gridmapdir
+    - the location of grid-security (/etc/grid-security)?
+
+
+** vo-support-module-gram5-glue2

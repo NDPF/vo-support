@@ -33,7 +33,7 @@ package = vo-support
 version = 0.4
 triggers = vomsdir.sh vomses.sh gridmapdir.sh grid-mapfile.sh
 triggersrc = vomsdir.sh vomses.sh gridmapdir.sh.in grid-mapfile.sh.in
-scripts = rpm-scriptlet-helpers.sh config-helpers.sh
+scripts = maintainerscript-helpers.sh config-helpers.sh
 utils = vo-config vo-support
 utilssources = vo-config.pl.in vo-support.pl.in
 distfiles = Makefile LICENSE Changes vo-support.spec $(scripts) $(triggersrc) $(utilssources)
@@ -44,7 +44,7 @@ build:
 	@echo "build done. Run 'make install' to finish the installation"
 
 installdirs:
-	mkdir -p $(DESTDIR)/$(datadir)/$(package)/modules
+	mkdir -p $(DESTDIR)/$(datadir)/$(package)/scriptlets
 	mkdir -p $(DESTDIR)/$(datadir)/vo-support/triggers/install
 	mkdir -p $(DESTDIR)/$(datadir)/vo-support/triggers/remove
 	mkdir -p $(DESTDIR)/$(datadir)/man/man1
@@ -63,7 +63,7 @@ install-mans: installdirs $(utils)
 	done
 
 install-scripts: installdirs
-	install -m 644 rpm-scriptlet-helpers.sh $(DESTDIR)/$(datadir)/$(package)/modules/
+	install -m 644 maintainerscript-helpers.sh $(DESTDIR)/$(datadir)/$(package)/scriptlets/
 
 install-utils: installdirs $(utils)
 	for i in $(utils) ; do \
@@ -83,6 +83,9 @@ dist:
 	mkdir -p _dist/$(package)-$(version)
 	install -m 644 $(distfiles) _dist/$(package)-$(version)
 	tar cCfz _dist $(package)-$(version).tar.gz $(package)-$(version)
+
+clean:
+	rm -f gridmapdir.sh grid-mapfile.sh vo-config vo-support
 
 do_subst = sed -e 's,[@]sbindir@,$(sbindir),' \
                -e 's,[@]datadir@,$(datadir),'

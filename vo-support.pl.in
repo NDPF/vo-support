@@ -23,7 +23,7 @@ vo-support - manage virtual organisation configuration
 
 =head1 SYNOPSIS
 
-vo-config [ B<options> ] command I<arguments>
+vo-support [ B<options> ] command I<arguments>
 
 =cut
 
@@ -41,9 +41,7 @@ my $vo = "";
 my $fqan = "";
 
 my $confdir = "/etc/vo-support";
-my $datadir = @datadir@;
-my $vodatadir = "/usr/share/vo-support/vos"; # TODO: make this configurable
-
+my $datadir = "@datadir@";
 
 =head2 Commands
 
@@ -69,19 +67,19 @@ Run a trigger action for all installed VOs.
 # hash are the commands as entered by the caller, the values are the names
 # of the subroutines to call.
 my %commands = ("list-vos" => \&listvos,
-		"list-triggers" => \&notimpl,
+		"list-triggers" => \&listtriggers,
 		"run-trigger" => \&notimpl
 	       );
 
-=item2 Options
+=head2 Options
 
 =over
 
-=item B<-d>, B<--debug>
+=item -d, --debug
 
 Enter debugging mode.
 
-=item B<-h>, B<--help>
+=item -h, --help
 
 Show extended help text.
 
@@ -104,7 +102,7 @@ if ($debug) {
   print STDERR "Entering debugging mode. Configuration read from current directory.\n";
   $confdir = ".";
   $voconf->confdir(".");
-  $vodatadir = "./vos";
+  $datadir = ".";
 }
 
 my $command = $ARGV[0] or do {
@@ -137,7 +135,7 @@ This directory collects static information about the VOs which is not considered
 site-specific or configurable. In debugging mode, the current directory is used instead.
 Data for any specific VO is recorded in the subdirectory
 
-    ./vos/I<vo>/
+./vos/I<vo>/
 
 Adding support for an additional VO is usually just a matter of installing an additional
 package.
@@ -194,8 +192,8 @@ and the .conf files in
 # List all the VO
 sub listvos {
   # list all the VOs in /usr/share/vo-support/vos
-  my @installedvos = <$vodatadir/*>;
-  print "Installed VOs in $vodatadir:\n\n";
+  my @installedvos = <$datadir/vos/*>;
+  print "Installed VOs in $datadir/vos:\n\n";
 
   for my $vodir (@installedvos) {
     if (-d $vodir) {
@@ -228,10 +226,12 @@ sub listtriggers {
   print "Install triggers:\n\n";
   for my $trigger (<$datadir/triggers/install/*>) {
     print $trigger =~ m{.*/triggers/(.*)};
+    print "\n";
   }
   print "Remove triggers:\n\n";
   for my $trigger (<$datadir/triggers/install/*>) {
-    print $trigger =~ m{.*/triggers/(.*)};
+    print $trigger =~ m{.*/triggers/(.*)} . "\n";
+    print "\n";
   }
 }
 

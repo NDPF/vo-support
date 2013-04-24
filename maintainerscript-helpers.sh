@@ -1,4 +1,4 @@
-#  File: vo-support/rpm-scriptlet-helpers.sh
+#  File: vo-support/maintainerscript-helpers.sh
 #  Author: Dennis van Dok <dennisvd@nikhef.nl>
 #
 #  Copyright 2012  Stichting FOM
@@ -21,16 +21,16 @@
 
 # %post
 # if [ $1 -ge 1 ]; then
-#    if [ -e /usr/share/vo-support/modules/rpm-scriptlet-helpers.sh ]; then
-#       . /usr/share/vo-support/modules/rpm-scriptlet-helpers.sh
+#    if [ -e /usr/share/vo-support/scriptlets/maintainerscript-helpers.sh ]; then
+#       . /usr/share/vo-support/scriptlets/maintainerscript-helpers.sh
 #       add_vo %{myvo}
 #    fi
 # fi
 # 
 # %preun
 # if [ $1 -eq 0 ]; then
-#    if [ -e /usr/share/vo-support/modules/rpm-scriptlet-helpers.sh ]; then
-#       . /usr/share/vo-support/modules/rpm-scriptlet-helpers.sh
+#    if [ -e /usr/share/vo-support/scriptlets/maintainerscript-helpers.sh ]; then
+#       . /usr/share/vo-support/scriptlets/maintainerscript-helpers.sh
 #       remove_vo %{myvo}
 #    fi
 # fi
@@ -75,8 +75,8 @@ remove_vo() {
 # in the %post script for a trigger package like so:
 # %post
 # if [ $1 -ge 1 ]; then
-#    if [ -e /usr/share/vo-support/modules/rpm-scriptlet-helpers.sh ]; then
-#       . /usr/share/vo-support/modules/rpm-scriptlet-helpers.sh
+#    if [ -e /usr/share/vo-support/scriptlets/maintainerscript-helpers.sh ]; then
+#       . /usr/share/vo-support/scriptlets/maintainerscript-helpers.sh
 #       add_trigger MYTRIGGER
 #    fi
 # fi
@@ -95,8 +95,8 @@ add_trigger() {
 # in the %preun scriptlet in the spec file of a trigger package:
 # %preun
 # if [ $1 -eq 0 ]; then
-#    if [ -e /usr/share/vo-support/modules/rpm-scriptlet-helpers.sh ]; then
-#       . /usr/share/vo-support/modules/rpm-scriptlet-helpers.sh
+#    if [ -e /usr/share/vo-support/scriptlets/maintainerscript-helpers.sh ]; then
+#       . /usr/share/vo-support/scriptlets/maintainerscript-helpers.sh
 #       remove_trigger MYTRIGGER
 #    fi
 # fi
