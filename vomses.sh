@@ -1,4 +1,4 @@
-#/bin/sh
+#!/bin/sh
 #  File: vo-support-vomsdir/vomses.sh
 #  Author: Dennis van Dok <dennisvd@nikhef.nl>
 #
