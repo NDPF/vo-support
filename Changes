@@ -1,6 +1,10 @@
 Revision history for vo-support
 
-0.5    2013-04-24 12:20
+0.6	2013-04-24 13:51
+
+       	Fixed 'hash-bang' first lines of trigger scripts (missing '!')
+
+0.5	2013-04-24 12:20
 
 	Unreleased.
 	Add clean target to Makefile
