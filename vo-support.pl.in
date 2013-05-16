@@ -15,7 +15,9 @@
 # limitations under the License.
 
 # This program implements a set of utility functions that may be
-# used by maintainer scripts for VO support purposes
+# used by packagers in the maintainer scripts (i.e. postinst),
+# or by system administrator.
+
 
 =head1 NAME
 
@@ -23,97 +25,22 @@ vo-support - manage virtual organisation configuration
 
 =head1 SYNOPSIS
 
-vo-support [ B<options> ] command I<arguments>
+vo-support [--debug] [--confdir F<path>] [--sharedir F<path>]
+{list-vos | enable-vo I<VO> | disable-vo I<VO> | list-modules | run-module I<module> [install | remove]}
+
+vo-support --help
+
 
 =cut
 
 use strict;
 use Getopt::Long;
 use Pod::Usage;
+use File::Copy;
 use Site::Configuration::VO;
 
 sub notimpl;
 sub listvos;
-
-my $debug = 0;
-my $help = 0;
-my $vo = "";
-my $fqan = "";
-
-my $confdir = "/etc/vo-support";
-my $datadir = "@datadir@";
-
-=head2 Commands
-
-=over
-
-=item list-vos
-
-List installed and configured Virtual Organisations
-
-=item list-triggers
-
-List installed actions to automatically run for each VO
-
-=item run-trigger I<trigger>
-
-Run a trigger action for all installed VOs.
-
-=back
-
-=cut
-
-# The list of commands that this program understands. The keys of the
-# hash are the commands as entered by the caller, the values are the names
-# of the subroutines to call.
-my %commands = ("list-vos" => \&listvos,
-		"list-triggers" => \&listtriggers,
-		"run-trigger" => \&notimpl
-	       );
-
-=head2 Options
-
-=over
-
-=item -d, --debug
-
-Enter debugging mode.
-
-=item -h, --help
-
-Show extended help text.
-
-=back
-
-=cut
-
-GetOptions("debug" => \$debug,
-	   "help" => \$help) or do {
-  pod2usage("Error parsing command line options.\n");
-};
-
-if ($help) {
-  pod2usage(-verbose => 2, -exitval => 0);
-}
-
-my $voconf = Site::Configuration::VO->new();
-
-if ($debug) {
-  print STDERR "Entering debugging mode. Configuration read from current directory.\n";
-  $confdir = ".";
-  $voconf->confdir(".");
-  $datadir = ".";
-}
-
-my $command = $ARGV[0] or do {
-  pod2usage("$0 requires a command.\n");
-};
-
-if (defined $commands{$command}) {
-  &{$commands{$command}}(@ARGV);
-} else {
-  print STDERR "Command '$command' is unknown.\n";
-}
 
 =head1 DESCRIPTION
 
@@ -129,29 +56,32 @@ The VO support structure is maintained in two places:
 
 =over
 
-=item @datadir@/vo-support/
+=item @datadir@/vo-support/vos/
 
 This directory collects static information about the VOs which is not considered
-site-specific or configurable. In debugging mode, the current directory is used instead.
-Data for any specific VO is recorded in the subdirectory
-
-./vos/I<vo>/
+site-specific or configurable. Data for any specific VO is recorded in a subdirectory
+named after the VO.
 
 Adding support for an additional VO is usually just a matter of installing an additional
 package.
 
-=item /etc/vo-support/*.conf
+=item /etc/vo-support/vos/*.conf
 
-Each configured VO has a single file named after it. In debugging mode
-the current directory is used. For details on the structure of these
-files see L<vo-config>. These files contain site-local settings per
-VO, and may differ radically between sites depending on local policies
-and structure.
+Each configured VO has a single file named after it. For details on
+the structure of these files see L<vo-config>. These files contain
+site-local settings per VO, and may differ radically between sites
+depending on local policies and structure.
 
 =back
 
 Typically each VO should be present in both locations, but configuration of a VO is
 not easily automated through package management.
+
+
+=cut
+
+
+=head1 OPTIONS
 
 The program accepts the following options:
 
@@ -159,10 +89,8 @@ The program accepts the following options:
 
 =item B<-d>, B<--debug>
 
-Enter debugging mode. The current working directory is used for the
-vo-support data directory as well as the vo-support configuration
-directory, so users can try out what some scripts would do without
-changing the system setup.
+Enter debugging mode. This generates diagnostic output to help
+trace the source of difficulties.
 
 =item B<-h>, B<--help>
 
@@ -170,11 +98,86 @@ This option shows the extended help text (which you are reading right
 now, if you didn't find this helpful then your only hope is to read
 the source code).
 
+=item B<-c>, B<--confdir> F<directory>
+
+Use an alternate configuration directory to look for VO configuration data.
+The default is F</etc/vo-config/>. Each configured VO should have one file
+in the F<vos> subdirectory named I<VO>.conf.
+
+=item B<-s>, B<--sharedir> F<directory>
+
+Override the static VO data directory (default is F<@datadir@/vo-support>).
+For each VO there should be a subdirectory that contains VO-specific data.
+
 =back
+
+=cut
+
+my $debug = 0;
+my $help = 0;
+my $vo = "";
+my $fqan = "";
+my $confdir = "";
+my $sharedir = "";
+
+GetOptions("debug" => \$debug,
+	   "help" => \$help,
+	   "confdir=s" => \$confdir,
+	   "sharedir=s" => \$sharedir) or do {
+  pod2usage("Error parsing command line options.\n");
+};
+
+if ($help) {
+  pod2usage(-verbose => 2, -exitval => 0);
+}
+
+if (!$confdir) {
+  $confdir = "/etc/vo-support";
+}
+
+if (!$sharedir) {
+  $sharedir = "@datadir@/vo-support";
+}
+
+
+my $voconf = Site::Configuration::VO->new();
+$voconf->confdir($confdir);
+
+if ($debug) {
+  print STDERR "Entering debugging mode.\n";
+}
+
+my $command = $ARGV[0] or do {
+  pod2usage("$0 requires a command.\n");
+};
+
+shift;
+
+=head1 COMMANDS
 
 The program interprets the first non-option argument as the command to execute.
 
-The currently understood commands are as follows.
+=cut
+
+# The list of commands that this program understands. The keys of the
+# hash are the commands as entered by the caller, the values are the names
+# of the subroutines to call.
+my %commands = ("list-vos" => \&listvos,
+		"enable-vo" => \&enablevo,
+		"disable-vo" => \&disablevo,
+		"list-modules" => \&listmodules,
+		"enable-module" => \&enablemodule,
+		"disable-module" => \&disablemodule,
+		"run-module" => \&runmodule,
+		"configure-vo" => \&configurevo,
+		"deconfigure-vo" => \&deconfigurevo
+	       );
+
+if (defined $commands{$command}) {
+  &{$commands{$command}}(@ARGV);
+} else {
+  print STDERR "Command '$command' is unknown.\n";
+}
 
 =head2 list-vos
 
@@ -185,61 +188,114 @@ in
 
 and the .conf files in
 
-    /etc/vo-support/
+    /etc/vo-support/vos
 
 =cut
 
 # List all the VO
 sub listvos {
   # list all the VOs in /usr/share/vo-support/vos
-  my @installedvos = <$datadir/vos/*>;
-  print "Installed VOs in $datadir/vos:\n\n";
-
+  my @installedvos = <$sharedir/vos/*>;
+  print "Installed VOs in $sharedir/vos/\n\n";
   for my $vodir (@installedvos) {
     if (-d $vodir) {
       $vodir =~ m{.*/([^/]*)};
       print $1 . "\n";
     }
-
   }
-
   # list all the VOs as configured in /etc/vo-support
-  my @configuredvos = </etc/vo-support/*.conf>;
-  print "\nConfigured VOs in /etc/vo-support/:\n\n";
-  for my $voconf (@configuredvos) {
-    $voconf =~ m{.*/([^/]*).conf$};
-    print $1 .  "\n";
+  my @configuredvos = <$confdir/vos/*.conf>;
+  print "\nConfigured VOs in $confdir/vos/\n\n";
+  for my $vo (@configuredvos) {
+    $vo =~ m{.*/([^/]*).conf$};
+    # is this an enabled VO?
+    my $voname = $1;
+    my $enabled = $voconf->isenabled(vo => $voname);
+    printf "%s (%s)\n", $voname , ( $enabled ? "enabled" : "disabled" );
   }
-
 }
 
+=head2 enable-vo I<VO>
 
-=head2 list-triggers
+Create a VO configuration file (if it doesn't exist) and set
 
-Lists the installed triggers in
+    enabled = true
 
-    @datadir@/vo-support/triggers/{install,remove}
+in the [DEFAULT] section. If the configuration file does
+not exist, the default is copied from @datadir@/vos/I<VO>/
 
 =cut
 
-sub listtriggers {
-  print "Install triggers:\n\n";
-  for my $trigger (<$datadir/triggers/install/*>) {
-    print $trigger =~ m{.*/triggers/(.*)};
+sub enablevo {
+  my $vo = shift;
+  my $conffile = "$confdir/vos/$vo.conf";
+  my $conftemplate = "$sharedir/vos/$vo/$vo.conf";
+  if (! -e $conffile) {
+    if (-f $conftemplate) {
+      copy $conftemplate, $conffile or die "Copy failed: $!";
+    } else {
+      printf STDERR "Cannot enable VO, missing configuration template %s\n",
+	$conftemplate;
+    }
+  }
+  # set enabled
+  my $enabled = $voconf->enable(vo => $vo);
+  if ( ! $enabled ) {
+    print STDERR "Failed to enable vo '$vo':\n";
+    printf STDERR "%s\n", $_ foreach $voconf->errmsg;
+  }
+  return 1;
+}
+
+
+=head2 disable-vo I<VO>
+
+If the VO is enabled, disable it by writing
+
+    enabled = false
+
+in the [DEFAULT] section of the VO configuration file.
+
+=cut
+
+sub disablevo {
+  my $vo = shift;
+  print STDERR "disabling vo $vo\n" if $debug;
+  $voconf->vo($vo);
+  if ( ! $voconf->disable ) {
+    print STDERR "Failed to disable vo '$vo':\n";
+    printf STDERR "%s\n", $_ foreach $voconf->errmsg;
+  }
+  return 1;
+}
+
+
+=head2 list-modules
+
+Lists the installed modules in
+
+    @datadir@/vo-support/modules/{available,install,remove}
+
+=cut
+
+sub listmodules {
+  print "Install modules:\n\n";
+  for my $module (<$sharedir/modules/install/*>) {
+    print $module =~ m{.*/modules/(.*)};
     print "\n";
   }
-  print "Remove triggers:\n\n";
-  for my $trigger (<$datadir/triggers/install/*>) {
-    print $trigger =~ m{.*/triggers/(.*)} . "\n";
+  print "Remove modules:\n\n";
+  for my $module (<$sharedir/modules/install/*>) {
+    print $module =~ m{.*/modules/(.*)} . "\n";
     print "\n";
   }
 }
 
 
 
-=head2 run-trigger {install | remove} I<trigger>
+=head2 run-module {install | remove} I<module>
 
-Run the specified trigger for all supported VOs.
+Run the specified module for all supported VOs.
 
 =cut
 
@@ -248,3 +304,63 @@ sub notimpl {
   print STDERR sprintf "The command '%s' is not implemented.\n", $command;
   exit 1;
 }
+
+=head2 configurevo I<list of VOs>
+
+This function is used from package maintainer scripts (postinst, prerm) to
+activate the support for a newly installed VO or list of VOs. Its counterpart
+deconfigurevo removes the support for VOs that are about to be deinstalled.
+
+
+=cut
+
+sub configurevo {
+}
+
+=head2 deconfigurevo I<list of VOs>
+
+This function is the counterpart of configurevo, and it is primarily
+intended for use in package maintainer scripts (i.e. prerm). It will
+run all the vo-support modules asking to remove VO support for each of
+the listed VOs.
+
+This function will not remove the actual configuration files of the
+VOs, as this could possibly destroy manual modifications to the
+configuration, but it will disable the VOs.
+
+=cut
+
+sub deconfigurevo {
+}
+
+=pod
+
+
+=head1 BUGS
+
+This program probably has bugs.
+
+=head1 AUTHOR
+
+Dennis van Dok <dennisvd at nikhef.nl>
+
+
+=head1 SEE ALSO
+
+L<Site::Configuration::VO>
+
+=head1 COPYRIGHT
+
+Copyright 2012, 2013 Stichting FOM <grid-mw-security@nikhef.nl>
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+L<http://www.apache.org/licenses/LICENSE-2.0>
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
