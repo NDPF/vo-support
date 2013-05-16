@@ -173,11 +173,17 @@ my %commands = ("list-vos" => \&listvos,
 		"deconfigure-vo" => \&deconfigurevo
 	       );
 
-if (defined $commands{$command}) {
-  &{$commands{$command}}(@ARGV);
-} else {
+if (! defined $commands{$command}) {
   print STDERR "Command '$command' is unknown.\n";
+  exit 1;
 }
+
+if ( &{$commands{$command}}(@ARGV) ) {
+  exit 0;
+} else {
+  exit 1;
+}
+
 
 =head2 list-vos
 
@@ -208,21 +214,22 @@ sub listvos {
   print "\nConfigured VOs in $confdir/vos/\n\n";
   for my $vo (@configuredvos) {
     $vo =~ m{.*/([^/]*).conf$};
-    # is this an enabled VO?
-    my $voname = $1;
-    my $enabled = $voconf->isenabled(vo => $voname);
-    printf "%s (%s)\n", $voname , ( $enabled ? "enabled" : "disabled" );
+    printf "%s\n", $1;
+  }
+  my @disabledvos = <$confdir/vos/*.conf-disabled>;
+  print "\nDisabled VOs in $confdir/vos/\n\n";
+  for my $vo (@disabledvos) {
+    $vo =~ m{.*/([^/]*).conf-disabled$};
+    printf "%s\n", $1;
   }
 }
 
 =head2 enable-vo I<VO>
 
-Create a VO configuration file (if it doesn't exist) and set
-
-    enabled = true
-
-in the [DEFAULT] section. If the configuration file does
-not exist, the default is copied from @datadir@/vos/I<VO>/
+If the VO configuration file exists, this is a no-op.  If the
+configuration file exists but is named I<VO>.conf-disabled, rename it
+to I<VO>.conf. If no file exists, the default is copied from
+@datadir@/vos/I<VO>/
 
 =cut
 
@@ -230,42 +237,37 @@ sub enablevo {
   my $vo = shift;
   my $conffile = "$confdir/vos/$vo.conf";
   my $conftemplate = "$sharedir/vos/$vo/$vo.conf";
-  if (! -e $conffile) {
-    if (-f $conftemplate) {
-      copy $conftemplate, $conffile or die "Copy failed: $!";
-    } else {
-      printf STDERR "Cannot enable VO, missing configuration template %s\n",
-	$conftemplate;
-    }
+  return 1 unless ! -e $conffile;
+
+  if (-e $conffile . "-disabled") {
+    move $conffile . "-disabled", $conffile or die "Move failed: $!";
+    return 1;
   }
-  # set enabled
-  my $enabled = $voconf->enable(vo => $vo);
-  if ( ! $enabled ) {
-    print STDERR "Failed to enable vo '$vo':\n";
-    printf STDERR "%s\n", $_ foreach $voconf->errmsg;
+  if (-f $conftemplate) {
+    copy $conftemplate, $conffile or die "Copy failed: $!";
+    return 1;
+  } else {
+    printf STDERR "Cannot enable VO, missing configuration template %s\n",
+      $conftemplate;
+    return 0;
   }
-  return 1;
 }
 
 
 =head2 disable-vo I<VO>
 
-If the VO is enabled, disable it by writing
-
-    enabled = false
-
-in the [DEFAULT] section of the VO configuration file.
+If the VO is configured, disable it by renaming
+the configuration file with a '-disabled' suffix. Otherwise,
+this is a no-op.
 
 =cut
 
 sub disablevo {
   my $vo = shift;
   print STDERR "disabling vo $vo\n" if $debug;
-  $voconf->vo($vo);
-  if ( ! $voconf->disable ) {
-    print STDERR "Failed to disable vo '$vo':\n";
-    printf STDERR "%s\n", $_ foreach $voconf->errmsg;
-  }
+  my $conffile = "$confdir/vos/$vo.conf";
+  return 1 unless -e $conffile;
+  move $conffile, $conffile . "-disabled" or die "Move failed: $!";
   return 1;
 }
 
