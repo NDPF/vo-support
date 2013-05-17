@@ -16,28 +16,31 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-# This script is installed as a trigger in
-# /usr/share/vo-support/triggers/install/gridmapdir.sh and
-# /usr/share/vo-support/triggers/remove/gridmapdir.sh
+# This script is installed as a module in
+# /usr/share/vo-support/triggers/gridmapdir.sh
 
 # It is normally run by %post or %preun scriptlets in RPM packages
 # for each installed VO. The first argument is the main command.
 # Commands understood by this script are:
-#     add-vo [list of VOs to add]
-#     remove-vo [list of VOs to remove]
+#     configure [list of VOs to add]
+#     deconfigure [list of VOs to remove]
 #
 # Other commands are silently ignored. The list of VOs may be empty.
 #
-# The add-vo command will add the VO's FQAN mapping rule to
+# The configure command will add the VO's FQAN mapping rule to
 # /etc/grid-security/voms-mapfile and /etc/grid-security/groupmapfile.
 # The configuration parameters in 
 # /etc/vo-support/$vo.conf
 # are poolprefix and groupmapping.
-
-# The remove-vo will uninstall these files.
+#
+# If the environment variable GRID_SECURITY_DIR is set, it is
+# used instead of /etc/grid-security.
+#
+# The deconfigure will uninstall these files.
 
 # installation variable
 sbindir=@sbindir@
+sysconfdir=@sysconfdir@
 
 printusage() {
     cat >&2 <<EOF
@@ -45,9 +48,9 @@ Usage: $prg command [ VO ... ]
 
 Valid commands:
 
- add-vo     add grid-mapfile entries for given VOs
+ configure     add grid-mapfile entries for given VOs
      
- remove-vo  remove grid-mapfile entries for given VOs
+ deconfigure  remove grid-mapfile entries for given VOs
 
 EOF
 }
@@ -58,14 +61,20 @@ if [ $# -lt 1 ] ; then
     exit 1
 fi
 
-gridmapfile=/etc/grid-security/voms-grid-mapfile
-groupmapfile=/etc/grid-security/groupmapfile
+if [ -z "$GRID_SECURITY_DIR" ]; then
+    gridsecdir=$sysconfdir/grid-security
+else
+    gridsecdir="$GRID_SECURITY_DIR"
+fi
+
+gridmapfile="$gridsecdir/voms-grid-mapfile"
+groupmapfile="$gridsecdir/groupmapfile"
 
 cmd="$1"
 shift
 
 # $1 = VO
-# $2 = add/remove
+# $2 = configure/deconfigure
 # FIXME: the mappings for /pvier also need to be replicated for
 # /pvier/Role=Null/Capability=Null because of some legacy software
 # support.
@@ -74,7 +83,7 @@ update_mapfiles() {
 	poolprefix=`${sbindir}/vo-config get-vo-param "$fqan" poolprefix`
 	groupmapping=`${sbindir}/vo-config get-vo-param "$fqan" groupmapping`
 	test "$groupmapping" != undefined || continue
-	if [ $2 = add ]; then
+	if [ $2 = configure ]; then
 	    # add the FQAN to the mapfiles
 	    # if it's not already there
 	    if test "$poolprefix" != undefined &&
@@ -85,7 +94,7 @@ update_mapfiles() {
 		! grep -qF "\"$fqan\" " $groupmapfile ; then
 		echo "\"$fqan\" $groupmapping" >> $groupmapfile
 	    fi
-	else # remove
+	else # deconfigure
 	    # remove the FQAN from the mapfiles
 	    if test "$poolprefix" != undefined && 
 		grep -qF "\"$fqan\" " $gridmapfile ; then
@@ -103,14 +112,9 @@ update_mapfiles() {
 
 
 case "$cmd" in
-    add-vo)
+    configure|deconfigure)
 	for vo in "$@" ; do
-	    update_mapfiles $vo add
-	done
-	;;
-    remove-vo)
-	for vo in "$@" ; do
-	    update_mapfiles $vo remove
+	    update_mapfiles $vo $cmd
 	done
 	;;
     *)

@@ -16,26 +16,27 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-# This script is installed as a trigger in
-# /usr/share/vo-support/triggers/install/gridmapdir.sh and
-# /usr/share/vo-support/triggers/remove/gridmapdir.sh
-
+# This script is installed as a module in
+# /usr/share/vo-support/triggers/gridmapdir.sh
+#
 # It is normally run by %post or %preun scriptlets in RPM packages
 # for each installed VO. The first argument is the main command.
 # Commands understood by this script are:
-#     add-vo [list of VOs to add]
-#     remove-vo [list of VOs to remove]
+#     configure [list of VOs to add]
+#     deconfigure [list of VOs to remove]
 #
 # Other commands are silently ignored. The list of VOs may be empty.
 #
-# The add-vo command will install the VO's pool account entries
+# The configure command will install the VO's pool account entries
 # in /etc/grid-security/gridmapdir according to the configuration
 # file in /etc/vo-support/$vo.conf
 #
-# The remove-vo will uninstall these files.
+# If the environment variable GRID_SECURITY_DIR is set, it is used
+# instead of /etc/grid-security.
+#
+# The deconfigure will uninstall these files.
 
-# installation variable
-sbindir=@sbindir@
+sysconfdir=@sysconfdir@
 
 printusage() {
     cat >&2 <<EOF
@@ -43,9 +44,9 @@ Usage: $prg command [ VO ... ]
 
 Valid commands:
 
- add-vo     add gridmapdir entries for given VOs
+ configure     add gridmapdir entries for given VOs
      
- remove-vo  remove gridmapdir entries for given VOs
+ deconfigure  remove gridmapdir entries for given VOs
 
 EOF
 }
@@ -56,17 +57,22 @@ if [ $# -lt 1 ] ; then
     exit 1
 fi
 
-gridmapdir=/etc/grid-security/gridmapdir
-vosdir=/usr/share/vo-support/vos
+if [ -z "$GRID_SECURITY_DIR" ]; then
+    gridsecdir="$sysconfdir/grid-security"
+else
+    gridsecdir="$GRID_SECURITY_DIR"
+fi
+
+gridmapdir="$gridsecdir/gridmapdir"
 
 cmd="$1"
 shift
 
 # $1 = VO
-# $2 = add/remove
+# $2 = configure/deconfigure
 update_gridmapdir() {
     if [ ! -d $gridmapdir ]; then
-	mkdir -P $gridmapdir
+	mkdir -p $gridmapdir
     fi
 
     # for each FQAN in this VO
@@ -76,9 +82,9 @@ update_gridmapdir() {
     #             touch each poolname that doesn't exist for adding
     #             remove each poolname if link count = 1.
 
-    for fqan in `${sbindir}/vo-config get-fqans $1` ; do
-	poolaccounts=`${sbindir}/vo-config get-vo-param "$fqan" poolaccounts`
-	poolprefix=`${sbindir}/vo-config get-vo-param "$fqan" poolprefix`
+    for fqan in `vo-config get-fqans $1` ; do
+	poolaccounts=`vo-config get-vo-param "$fqan" poolaccounts`
+	poolprefix=`vo-config get-vo-param "$fqan" poolprefix`
 	test "$poolaccounts" != undefined || continue
 	test "$poolprefix" != undefined || continue
 	if [ $poolaccounts -gt 0 -a -n "$poolprefix" ]; then
@@ -86,7 +92,7 @@ update_gridmapdir() {
 	    while [ $i -lt $poolaccounts ]; do
 		poolaccount=$gridmapdir/`printf "$poolprefix%03i" $i`
 		if [ -e $poolaccount ] ; then
-		    if [ $2 = remove ]; then
+		    if [ $2 = deconfigure ]; then
 			# only remove pool account not currently in use
 			linkcount=`stat --format '%h' $poolaccount`
 			if [ $linkcount -eq 1 ]; then
@@ -96,7 +102,7 @@ update_gridmapdir() {
 			fi
 		    fi
 		else # file does not exists
-		    if [ $2 = add ]; then
+		    if [ $2 = configure ]; then
 		    	touch $poolaccount
 		    fi
 		fi
@@ -108,14 +114,9 @@ update_gridmapdir() {
 
 
 case "$cmd" in
-    add-vo)
+    configure|deconfigure)
 	for vo in "$@" ; do
-	    update_gridmapdir $vo add
-	done
-	;;
-    remove-vo)
-	for vo in "$@" ; do
-	    update_gridmapdir $vo remove
+	    update_gridmapdir $vo $cmd
 	done
 	;;
     *)

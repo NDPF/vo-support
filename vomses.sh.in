@@ -1,5 +1,5 @@
 #!/bin/sh
-#  File: vo-support-vomsdir/vomsdir.sh
+#  File: vo-support-vomsdir/vomses.sh
 #  Author: Dennis van Dok <dennisvd@nikhef.nl>
 #
 #  Copyright 2012  Stichting FOM
@@ -16,23 +16,27 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-# This script is installed as a trigger in
-# /usr/share/vo-support/triggers/install/vomsdir.sh and
-# /usr/share/vo-support/triggers/remove/vomsdir.sh
+# This script is installed as a module in
+# /usr/share/vo-support/triggers/vomses.sh
 
 # It is normally run by %post or %preun scriptlets in RPM packages
 # for each installed VO. The first argument is the main command.
 # Commands understood by this script are:
-#     add-vo [list of VOs to add]
-#     remove-vo [list of VOs to remove]
+#     configure [list of VOs to add]
+#     deconfigure [list of VOs to remove]
 #
 # Other commands are silently ignored. The list of VOs may be empty.
 #
-# The add-vo command will install the VO's .lsc file(s) in
-# /etc/grid-security/vomsdir/$vo/
-# from /usr/share/vo-support/vos/$vo/.
+# The configure command will install the VO's vomses entries in
+# /etc/vomses/ by making symbolic links to whatever is in
+#  /usr/share/vo-support/vos/$vo/vomses/*
+# If the environment X509_VOMSES is set, this will be used instead
+# of /etc/vomses.
 #
-# The remove-vo will uninstall these files.
+# The deconfigure will remove files that match
+# /etc/vomses/vo-*
+
+sysconfdir=@sysconfdir@
 
 if [ $# -lt 1 ] ; then
     echo "$0 requires a command" >&2
@@ -40,37 +44,40 @@ if [ $# -lt 1 ] ; then
 fi
 
 vosdir=/usr/share/vo-support/vos
-vomsdir=/etc/grid-security/vomsdir
+
+if [ -n "$X509_VOMSES" ]; then
+    vomsesdir="$X509_VOMSES"
+else
+    vomsesdir=$sysconfdir/vomses
+fi
 
 cmd="$1"
 shift
 
-add_vo_to_vomsdir() {
-    if [ -d "$vosdir/$1" ]; then
-	test -d "$vomsdir/$1" || mkdir -p "$vomsdir/$1"
-	for i in "$vosdir/$1"/*.lsc ; do
-	    if [ ! -e "$vomsdir/$1"/`basename "$i"` ]; then
-		ln -s "$i" "$vomsdir/$1/"
+add_vo_to_vomses() {
+    if [ -d "$vosdir/$1/vomses" ]; then
+	for i in "$vosdir/$1/vomses"/* ; do
+	    if [ ! -e $vomsesdir/`basename "$i"` ]; then
+		ln -s "$i" $vomsesdir/
 	    fi
 	done
     fi
 }
 
-remove_vo_from_vomsdir() {
-    rm -f "$vomsdir/$1"/*
-    test -d "$vomsdir/$1" && rmdir "$vomsdir/$1"
+remove_vo_from_vomses() {
+    rm -f $vomsesdir/"$1"-*
 }
 
 case "$cmd" in
-    add-vo)
-	test -e $vomsdir || mkdir -p $vomsdir
+    configure)
+	test -d "$vomsesdir" || mkdir -p "$vomsesdir"
 	for vo in "$@" ; do
-	    add_vo_to_vomsdir $vo
+	    add_vo_to_vomses "$vo"
 	done
 	;;
-    remove-vo)
+    deconfigure)
 	for vo in "$@" ; do
-	    remove_vo_from_vomsdir $vo
+	    remove_vo_from_vomses "$vo"
 	done
 	;;
 esac
