@@ -25,6 +25,7 @@
 prefix = /usr
 datadir = $(prefix)/share
 sbindir = $(prefix)/sbin
+sysconfdir = /etc
 DESTDIR =
 
 # These variables should not be changed by the user
@@ -92,4 +93,5 @@ clean:
 	rm -f gridmapdir.sh grid-mapfile.sh vo-config vo-support
 
 do_subst = sed -e 's,[@]sbindir@,$(sbindir),' \
-               -e 's,[@]datadir@,$(datadir),'
+               -e 's,[@]datadir@,$(datadir),' \
+	       -e 's,[@]sysconfdir@,$(sysconfdir)'
