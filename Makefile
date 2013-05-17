@@ -94,4 +94,4 @@ clean:
 
 do_subst = sed -e 's,[@]sbindir@,$(sbindir),' \
                -e 's,[@]datadir@,$(datadir),' \
-	       -e 's,[@]sysconfdir@,$(sysconfdir)'
+	       -e 's,[@]sysconfdir@,$(sysconfdir),'
