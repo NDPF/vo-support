@@ -42,7 +42,15 @@ if [ $# -lt 1 ] ; then
     exit 1
 fi
 
-vosdir=/usr/share/vo-support/vos
+if [ -n "$VO_DATA_DIR" ]; then
+    # must be absolute path because we symlink to it
+    if ! echo "$VO_DATA_DIR" | grep -q '^/' ; then
+	VO_DATA_DIR=`pwd`/"$VO_DATA_DIR"
+    fi
+    vosdir="$VO_DATA_DIR/vos"
+else
+    vosdir=/usr/share/vo-support/vos
+fi
 
 if [ -n "$X509_VOMS_DIR" ]; then
     vomsdir="$X509_VOMS_DIR"
