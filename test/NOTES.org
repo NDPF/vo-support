@@ -1,0 +1,37 @@
+#+TITLE:     Test suite for vo-support
+#+AUTHOR:    Dennis van Dok
+#+EMAIL:     dennisvd@nikhef.nl
+#+DATE:      2013-05-01
+#+DESCRIPTION:
+#+KEYWORDS:
+#+LANGUAGE:  en
+#+OPTIONS:   H:3 num:t toc:t \n:nil @:t ::t |:t ^:t -:t f:t *:t <:t
+#+OPTIONS:   TeX:t LaTeX:t skip:nil d:nil todo:t pri:nil tags:not-in-toc
+#+INFOJS_OPT: view:nil toc:nil ltoc:t mouse:underline buttons:0 path:http://orgmode.org/org-info.js
+#+EXPORT_SELECT_TAGS: export
+#+EXPORT_EXCLUDE_TAGS: noexport
+#+LINK_UP:   
+#+LINK_HOME: 
+#+XSLT:
+
+* Test suite for vo-support
+
+  This directory contains the tests for the tools and scripts in
+  the vo-support package.
+
+  The tests can be run by running
+  
+  : make test
+
+  The tests are defined in the ~runtests.sh~ script, which uses [[http://code.google.com/p/shunit2/][shunit2]] as a unit test
+  tool. The other files in this directory contain the output of certain calls, and they
+  are used by the test scripts for comparison with the actual calls.
+
+  Before any test is run, the testdata is copied to a temporary directory. Some of the
+  scripts will intentionally change, add or delete files from the test set, so a fresh
+  copy is made every time the tests are run.
+
+  
+** vo-support.pl
+
+   
