@@ -26,7 +26,9 @@ vo-support - manage virtual organisation configuration
 =head1 SYNOPSIS
 
 vo-support [--debug] [--confdir F<path>] [--sharedir F<path>]
-{list-vos | enable-vo I<VO> | disable-vo I<VO> | list-modules | run-module I<module> [install | remove]}
+{list-vos | list-modules | run-module I<module> {configure|deconfigure} I<VOs> |
+configure-vo I<VOs> | deconfigure-vo I<VOs> |
+add-module I<module> | remove-module I<module> }
 
 vo-support --help
 
@@ -163,14 +165,12 @@ The program interprets the first non-option argument as the command to execute.
 # hash are the commands as entered by the caller, the values are the names
 # of the subroutines to call.
 my %commands = ("list-vos" => \&listvos,
-		"enable-vo" => \&enablevo,
-		"disable-vo" => \&disablevo,
 		"list-modules" => \&listmodules,
-		"enable-module" => \&enablemodule,
-		"disable-module" => \&disablemodule,
 		"run-module" => \&runmodule,
 		"configure-vo" => \&configurevo,
-		"deconfigure-vo" => \&deconfigurevo
+		"deconfigure-vo" => \&deconfigurevo,
+		"add-module" => \&addmodule,
+		"remove-module" => \&removemodule
 	       );
 
 if (! defined $commands{$command}) {
@@ -224,15 +224,6 @@ sub listvos {
   }
 }
 
-=head2 enable-vo I<VO>
-
-If the VO configuration file exists, this is a no-op.  If the
-configuration file exists but is named I<VO>.conf-disabled, rename it
-to I<VO>.conf. If no file exists, the default is copied from
-@datadir@/vos/I<VO>/
-
-=cut
-
 sub enablevo {
   my $vo = shift;
   my $conffile = "$confdir/vos/$vo.conf";
@@ -254,14 +245,6 @@ sub enablevo {
 }
 
 
-=head2 disable-vo I<VO>
-
-If the VO is configured, disable it by renaming
-the configuration file with a '-disabled' suffix. Otherwise,
-this is a no-op.
-
-=cut
-
 sub disablevo {
   my $vo = shift;
   print STDERR "disabling vo $vo\n" if $debug;
@@ -281,59 +264,145 @@ Lists the installed modules in
 =cut
 
 sub listmodules {
-  print "Install modules:\n\n";
-  for my $module (<$sharedir/modules/install/*>) {
+  print "Installed modules:\n\n";
+  for my $module (<$sharedir/modules/*>) {
     print $module =~ m{.*/modules/(.*)};
     print "\n";
   }
-  print "Remove modules:\n\n";
-  for my $module (<$sharedir/modules/install/*>) {
-    print $module =~ m{.*/modules/(.*)} . "\n";
-    print "\n";
-  }
 }
 
 
 
-=head2 run-module {install | remove} I<module>
+=head2 run-module I<module> {configure | deconfigure} I<VOs>
 
-Run the specified module for all supported VOs.
+Run the specified module for given VOs.
 
 =cut
 
-sub notimpl {
-  my $command = shift;
-  print STDERR sprintf "The command '%s' is not implemented.\n", $command;
-  exit 1;
-}
+=head2 configure-vo I<list of VOs>
 
-=head2 configurevo I<list of VOs>
+=head2 deconfigure-vo I<list of VOs>
 
 This function is used from package maintainer scripts (postinst, prerm) to
 activate the support for a newly installed VO or list of VOs. Its counterpart
 deconfigurevo removes the support for VOs that are about to be deinstalled.
 
+These functions will enable/disable the VOs as well.
+
+=over
+
+=item enabling a VO
+
+If the VO configuration file exists, this is a no-op.  If the
+configuration file exists but is named I<VO>.conf-disabled, it is renamed
+to I<VO>.conf. If no file exists, the default is copied from
+@datadir@/vos/I<VO>/
+
+=item disabling a VO
+
+If the VO is configured, disable it by renaming the configuration file
+with a '-disabled' suffix. Otherwise, this is a no-op. This will not
+remove the actual configuration files of the VOs, as this could
+possibly destroy manual modifications to the configuration.
+
+
+=back
 
 =cut
+
+# Run the module on a list of VOs
+# first argument is the name of the module
+# second argument is the action "configure"/"deconfigure"
+sub runmodule {
+  my $module = shift;
+  my $action = shift;
+  die "Illegal action: $action" if $action !~ /^(de)?configure$/;
+  my $modpath = "$sharedir/modules/$module";
+  return 0 unless -e $modpath;
+  system $modpath, $action, @_;
+  return ($? >> 8 == 0); # see perldoc system; exit code needs shift 8
+}
+
 
 sub configurevo {
+  # for each vo, enable the vo
+  # for each module, run the module on all the VOs
+  my @vos = @_;
+  foreach my $vo (@vos) {
+    enablevo $vo or return 0;
+  }
+  foreach my $module (<$sharedir/modules/*>) {
+    $module =~ s,.*/,,;
+    runmodule $module, "configure", @vos or return 0;
+  }
+  return 1;
 }
 
-=head2 deconfigurevo I<list of VOs>
+sub deconfigurevo {
+  # be lenient; non-configured VOs are silently
+  # ignored by removing them from the list
+  # run each module to deconfigure the given VOs
+  my @vos = (); # build this list from the arguments
+  foreach my $vo (@_) {
+    push @vos, $vo if -e "$confdir/vos/$vo.conf";
+  }
+  my @modules = <$sharedir/modules/*>;
+  foreach my $module (@modules) {
+    $module =~ s,.*/,,;
+    runmodule $module, "deconfigure", @vos or return 0;
+  }
+  foreach my $vo (@vos) {
+    disablevo $vo or return 0;
+  }
+  return 1;
+}
 
-This function is the counterpart of configurevo, and it is primarily
-intended for use in package maintainer scripts (i.e. prerm). It will
-run all the vo-support modules asking to remove VO support for each of
-the listed VOs.
+=head2 add-module I<module>
 
-This function will not remove the actual configuration files of the
-VOs, as this could possibly destroy manual modifications to the
-configuration, but it will disable the VOs.
+When a new vo-config module is introduced on the system, add-module
+should be called to run the module for all the configured VOs on
+the system. This is typically done by the post-install script of
+the module's package.
+
+=head2 remove-module I<module>
+
+This function is the counterpart of add-module, and makes sure the
+module is run for all configured VOs to deconfigure the module before
+it is removed, e.g. as the prerm phase of the package maintainer
+scripts. This is to make sure no configuration is left behind on
+removal.
 
 =cut
 
-sub deconfigurevo {
+
+sub configuremodule {
+  my $module = shift;
+  my $action = shift; # configure or deconfigure
+  # find all the configured VOs
+  my @voconfs = <$confdir/vos/*.conf>;
+  my @vos = ();
+  # extract the name of the VO from the filename
+  foreach my $vo (@voconfs) {
+    (my $voname) = $vo =~ m{([^/]*)\.conf$};
+    push @vos, $voname;
+  }
+  if (@vos) {
+    runmodule $module, $action, @vos;
+  }
 }
+
+# this is run when a new module is added to the system
+# and it should be run on all the configured VOs.
+sub addmodule {
+  configuremodule shift, "configure";
+}
+
+# The counterpart of addmodule; this is nearly the same as addmodule
+sub removemodule {
+  configuremodule shift, "deconfigure";
+}
+
+
 
 =pod
 

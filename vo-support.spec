@@ -110,8 +110,12 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root,-)
+%doc LICENSE Changes
 %{_datadir}/%{name}/modules
 %{_sbindir}/vo-config
+%{_sbindir}/vo-support
+%{_mandir}/man1/vo-config.1*
+%{_mandir}/man1/vo-support.1*
 %dir %{_datadir}/%{name}/vos
 %dir %{_datadir}/%{name}/triggers/install
 %dir %{_datadir}/%{name}/triggers/remove

@@ -1,7 +1,9 @@
 * vo-support
   
-  This generic package contains the support structure for including all kinds of
-  individual VOs. The directories
+  This package implements the [[*Virtual%20Organisation%20support%20structure][support structure]] for Virtual Organisations (VOs) as
+  used by Grid Middleware. 
+
+  The directories
   : /usr/share/vo-support/triggers/install/
   : /usr/share/vo-support/triggers/remove/
   may be populated by all kinds of VO-related stuff; conceptually, the install directory
@@ -9,34 +11,6 @@
   run the new install script on all VOs), and the remove directory similarly contains scripts
   to be run on removal. 
 
-  Obtain the VoDump.xml file from the Operations Portal
-  http://operations-portal.egi.eu/xml/voIDCard/public/all/true
-
-** configuration
-
-   The vo-support package needs no configuration.
-
-
-** vo-support-biggrid-pvier
-
-   As an example package, this includes support for the pvier VO within Big Grid.
-
-*** contents
-
-    : /usr/share/vo-support/vo/pvier
-    It may contain: the VO VOID card (or a reference to it). The list of groups, roles
-    and capabilities. The LSC file (which contains the chain of DNs of the VO server up
-    to the issuing CA).
-
-*** configuration
-
-    A site must configure how to support the VOMS roles (FQANS) in
-    terms of account mappings and groups; this will be used by the
-    module that populates /etc/grid-security/voms-grid-mapfile
-    and /etc/grid-security/groupmapfile. This configuration probably should go
-    to
-    : /etc/vo-support/pvier.conf
-    which differs from the YAIM approach to aggregate all VOs in a single config.
 
 
 ** vo-support-module-access-rules
@@ -237,6 +211,28 @@
 
 
    
+
+
+** Example VO package lay-out
+
+   As an example package, this includes support for the pvier VO within Big Grid.
+
+*** contents
+
+    : /usr/share/vo-support/vo/pvier
+    It may contain: the VO VOID card (or a reference to it). The list of groups, roles
+    and capabilities. The LSC file (which contains the chain of DNs of the VO server up
+    to the issuing CA).
+
+*** configuration
+
+    A site must configure how to support the VOMS roles (FQANS) in
+    terms of account mappings and groups; this will be used by the
+    module that populates /etc/grid-security/voms-grid-mapfile
+    and /etc/grid-security/groupmapfile. This configuration probably should go
+    to
+    : /etc/vo-support/pvier.conf
+    which differs from the YAIM approach to aggregate all VOs in a single config.
 
 
 * Virtual Organisation support tasks				  :obsoleted:

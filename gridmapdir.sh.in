@@ -17,7 +17,7 @@
 #   limitations under the License.
 
 # This script is installed as a module in
-# /usr/share/vo-support/triggers/gridmapdir.sh
+# /usr/share/vo-support/modules/gridmapdir.sh
 #
 # It is normally run by %post or %preun scriptlets in RPM packages
 # for each installed VO. The first argument is the main command.

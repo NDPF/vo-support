@@ -23,7 +23,7 @@
 # if [ $1 -ge 1 ]; then
 #    if [ -e /usr/share/vo-support/scriptlets/maintainerscript-helpers.sh ]; then
 #       . /usr/share/vo-support/scriptlets/maintainerscript-helpers.sh
-#       add_vo %{myvo}
+#       configure_vo %{myvo}
 #    fi
 # fi
 # 
@@ -31,7 +31,7 @@
 # if [ $1 -eq 0 ]; then
 #    if [ -e /usr/share/vo-support/scriptlets/maintainerscript-helpers.sh ]; then
 #       . /usr/share/vo-support/scriptlets/maintainerscript-helpers.sh
-#       remove_vo %{myvo}
+#       deconfigure_vo %{myvo}
 #    fi
 # fi
 
@@ -39,75 +39,45 @@
 # interest
 scriptdir=`dirname $0`
 
-# function add_vo() takes care of adding support for
-# additional VOs. The names of the VOs are passed as arguments.
-# For each VO all the registered triggers in
-# /usr/share/vo-support/triggers/install/ is run. The triggers
-# are run in normal unix sort order.
-# Each trigger should accept 'add-vo' as a first argument
-# and a (possibly empty) list of VOs as following arguments.
-
-add_vo() {
-    for i in `ls /usr/share/vo-support/triggers/install/` ; do
-	if [ -x "/usr/share/vo-support/triggers/install/$i" ]; then
-	    "/usr/share/vo-support/triggers/install/$i" add-vo "$@"
-	fi
-    done
+# function configure_vo() takes care of configuring the system by
+# running each support module for the VOs given as arguments.
+configure_vo() {
+    vo-support configure-vo "$@"
 }
 
-# function remove_vo() takes care of removing support for
-# VOs. The names of the VOs are passed as arguments.
-# For each VO all the registered triggers in
-# /usr/share/vo-support/triggers/remove/ is run. The triggers
-# are run in normal unix sort order.
-# Each trigger should accept 'remove-vo' as a first argument
-# and a (possibly empty) list of VOs as following arguments.
-
-remove_vo() {
-    for i in `ls /usr/share/vo-support/triggers/remove/` ; do
-	if [ -x "/usr/share/vo-support/triggers/remove/$i" ]; then
-	    "/usr/share/vo-support/triggers/remove/$i" remove-vo "$@"
-	fi
-    done
+# function deconfigure_vo() takes care of removing support for the VOs
+# passed as arguments.
+deconfigure_vo() {
+    vo-support deconfigure-vo "$@"
 }
 
-# function add_trigger() runs a trigger for all VOs. Use this
-# in the %post script for a trigger package like so:
+# function add_module() runs a module for all configured VOs. Use this
+# in the %post script for a module package like so:
 # %post
 # if [ $1 -ge 1 ]; then
 #    if [ -e /usr/share/vo-support/scriptlets/maintainerscript-helpers.sh ]; then
 #       . /usr/share/vo-support/scriptlets/maintainerscript-helpers.sh
-#       add_trigger MYTRIGGER
+#       add_module MYMODULE
 #    fi
 # fi
 # 
-# The argument is the name of the trigger to add.
-add_trigger() {
-    vos=`ls /usr/share/vo-support/vos/`
-    test ! -z "$vos" || return 0
-    test ! -z "$1" || return 1
-    if [ -x /usr/share/vo-support/triggers/install/$1 ]; then
-	/usr/share/vo-support/triggers/install/$1 add-vo $vos
-    fi
+# The argument is the name of the module to add.
+add_module() {
+    vo-support add-module $1
 }
 
-# function remove_trigger() runs a trigger for all VOs. Use
-# in the %preun scriptlet in the spec file of a trigger package:
+# function remove_module() runs a module for all VOs. Use
+# in the %preun scriptlet in the spec file of a module package:
 # %preun
 # if [ $1 -eq 0 ]; then
 #    if [ -e /usr/share/vo-support/scriptlets/maintainerscript-helpers.sh ]; then
 #       . /usr/share/vo-support/scriptlets/maintainerscript-helpers.sh
-#       remove_trigger MYTRIGGER
+#       remove_module MYMODULE
 #    fi
 # fi
-# The argument is the name of the trigger to remove.
-remove_trigger() {
-    vos=`ls /usr/share/vo-support/vos/`
-    test ! -z "$vos" || return 0
-    test ! -z "$1" || return 1
-    if [ -x /usr/share/vo-support/triggers/remove/$1 ]; then
-	/usr/share/vo-support/triggers/remove/$1 remove-vo $vos
-    fi
+# The argument is the name of the module to remove.
+remove_module() {
+    vo-support remove-module $1
 }
 
 vo_config() {
