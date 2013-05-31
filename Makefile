@@ -38,7 +38,7 @@ scriptlets = maintainerscript-helpers.sh
 utils = vo-config vo-support
 utilssources = vo-config.pl.in vo-support.pl.in
 testsources = test/
-distfiles = Makefile LICENSE-LGPL LICENSE-APACHE2 Changes README.org \
+distfiles = Makefile LICENSE-GPL LICENSE-LGPL LICENSE-APACHE2 Changes README.org \
 	vo-support.spec $(scriptlets) $(modulesrc) $(utilssources)
 
 .PHONY: install build binary test installdirs install-scriptlets install-modules
@@ -94,6 +94,7 @@ test: binary
 
 clean:
 	rm -f gridmapdir.sh grid-mapfile.sh vo-config vo-support
+	cd test && make clean
 
 do_subst = sed -e 's,[@]sbindir@,$(sbindir),' \
                -e 's,[@]datadir@,$(datadir),' \
