@@ -34,18 +34,20 @@ package = vo-support
 version = 0.6
 modules = vomsdir.sh vomses.sh gridmapdir.sh grid-mapfile.sh
 modulesrc = vomsdir.sh vomses.sh gridmapdir.sh.in grid-mapfile.sh.in
-scripts = maintainerscript-helpers.sh config-helpers.sh
+scriptlets = maintainerscript-helpers.sh
 utils = vo-config vo-support
 utilssources = vo-config.pl.in vo-support.pl.in
-distfiles = Makefile LICENSE Changes vo-support.spec $(scripts) $(modulesrc) $(utilssources)
+testsources = test/
+distfiles = Makefile LICENSE-LGPL LICENSE-APACHE2 Changes README.org \
+	vo-support.spec $(scriptlets) $(modulesrc) $(utilssources)
 
-.PHONY: install build binary test installdirs install-scripts install-modules
+.PHONY: install build binary test installdirs install-scriptlets install-modules
 
 build: binary
 	@echo "build done. Run 'make install' to finish the installation"
 	@echo "or 'make test' to run the test suite"
 
-binary: $(utils) $(scripts) $(modules)
+binary: $(utils) $(scriptlets) $(modules)
 
 installdirs:
 	mkdir -p $(DESTDIR)/$(datadir)/$(package)/scriptlets
@@ -65,7 +67,7 @@ install-mans: installdirs $(utils)
 	    pod2man -c "VO SUPPORT" $$i $(DESTDIR)/$(datadir)/man/man1/$$i.1 ; \
 	done
 
-install-scripts: installdirs
+install-scriptlets: installdirs
 	install -m 644 maintainerscript-helpers.sh $(DESTDIR)/$(datadir)/$(package)/scriptlets/
 
 install-utils: installdirs $(utils)
@@ -78,12 +80,13 @@ install-modules: installdirs $(modules)
 	    install -m 755 $$i $(DESTDIR)/$(datadir)/vo-support/modules/ ; \
 	done
 
-install: install-scripts install-utils install-modules install-mans
+install: install-scriptlets install-utils install-modules install-mans
 
 dist:
 	rm -rf _dist/
 	mkdir -p _dist/$(package)-$(version)
 	install -m 644 $(distfiles) _dist/$(package)-$(version)
+	cd test && make dist distdir=../_dist/$(package)-$(version)
 	tar cCfz _dist $(package)-$(version).tar.gz $(package)-$(version)
 
 test: binary
