@@ -12,7 +12,7 @@ oneTimeSetUp() {
     SHAREDIR=$tmpdir/vodata
     OUTPUTDIR=$tmpdir/output
     TESTDIR=`dirname $0`
-    mkdir $OUTPUTDIR
+    mkdir -p $OUTPUTDIR $SHAREDIR $CONFDIR
     export CONFDIR SHAREDIR OUTPUTDIR TESTDIR
     VOSUPPORT="`dirname $0`/../vo-support --confdir $CONFDIR --sharedir $SHAREDIR"
     if ! $VOSUPPORT --help > /dev/null 2>&1 ; then
@@ -25,6 +25,7 @@ oneTimeSetUp() {
     PATH="`dirname $0`/..:$PATH"
     export PATH
     mkdir -p $tmpdir/etc
+    mkdir -p $SHAREDIR/modules
     for i in gridmapdir.sh grid-mapfile.sh vomsdir.sh vomses.sh ; do
 	install -m 755 ../$i $SHAREDIR/modules/$i
     done
