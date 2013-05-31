@@ -26,7 +26,7 @@ NOTES.pdf: NOTES.org
 
 dist:
 	mkdir $(distdir)/test
-	install -m 644 $(distfiles) $(distdir)/test
+	cp -r $(distfiles) $(distdir)/test
 	for i in $(testdata) ; do \
 	    mkdir -p $(distdir)/test/`dirname $$i` ; \
 	    install -m 644 testdata/$$i $(distdir)/test/`dirname $$i` ; \
