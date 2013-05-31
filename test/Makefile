@@ -31,3 +31,6 @@ dist:
 	    mkdir -p $(distdir)/test/testdata/`dirname $$i` ; \
 	    install -m 644 testdata/$$i $(distdir)/test/testdata/`dirname $$i` ; \
 	done
+
+clean:
+	rm -rf vo-support-test/
