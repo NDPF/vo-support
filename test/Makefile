@@ -28,6 +28,6 @@ dist:
 	mkdir $(distdir)/test
 	cp -r $(distfiles) $(distdir)/test
 	for i in $(testdata) ; do \
-	    mkdir -p $(distdir)/test/`dirname $$i` ; \
-	    install -m 644 testdata/$$i $(distdir)/test/`dirname $$i` ; \
+	    mkdir -p $(distdir)/test/testdata/`dirname $$i` ; \
+	    install -m 644 testdata/$$i $(distdir)/test/testdata/`dirname $$i` ; \
 	done
