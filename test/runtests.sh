@@ -64,10 +64,10 @@ testListVos() {
 
 testAddRemoveGridMapdir() {
     $VOSUPPORT add-module gridmapdir.sh || fail "add-module gridmapdir.sh failed"
-    assertSame "`ls $GRID_SECURITY_DIR/gridmapdir`" "`cat $TESTDIR/add-gridmapdir.out`"
+    assertSame "`cat $TESTDIR/add-gridmapdir.out`" "`ls $GRID_SECURITY_DIR/gridmapdir`"
     assertGridMapEntries pvier 99
     $VOSUPPORT remove-module gridmapdir.sh || fail "remove-module gridmapdir.sh failed"
-    assertSame "`ls $GRID_SECURITY_DIR/gridmapdir`" ""
+    assertSame "" "`ls $GRID_SECURITY_DIR/gridmapdir`"
 }
 
 # Test that existing mappings will be preserved in the gridmapdir
@@ -76,11 +76,11 @@ testRemoveGridMapDirWithLink() {
     # mappings are hard links
     ln $GRID_SECURITY_DIR/gridmapdir/pvier001 $GRID_SECURITY_DIR/gridmapdir/testmapping
     $VOSUPPORT remove-module gridmapdir.sh || fail "remove-module gridmapdir.sh failed"
-    assertSame "`ls $GRID_SECURITY_DIR/gridmapdir`" "pvier001
-testmapping"
+    assertSame "pvier001
+testmapping" "`ls $GRID_SECURITY_DIR/gridmapdir`"
     rm $GRID_SECURITY_DIR/gridmapdir/testmapping
     $VOSUPPORT remove-module gridmapdir.sh || fail "remove-module gridmapdir.sh failed"
-    assertSame "`ls $GRID_SECURITY_DIR/gridmapdir`" ""
+    assertSame "" "`ls $GRID_SECURITY_DIR/gridmapdir`"
 }
 
 testAddRemoveGridMapfile() {
@@ -90,8 +90,8 @@ testAddRemoveGridMapfile() {
     assertTrue "files $GRID_SECURITY_DIR/groupmapfile and $TESTDIR/groupmapfile.out differ" \
         "cmp $GRID_SECURITY_DIR/groupmapfile $TESTDIR/groupmapfile.out"
     $VOSUPPORT remove-module grid-mapfile.sh || fail "remove-module grid-mapfile.sh failed"
-    assertSame "`stat -c '%s' $GRID_SECURITY_DIR/voms-grid-mapfile`" 0
-    assertSame "`stat -c '%s' $GRID_SECURITY_DIR/groupmapfile`" 0
+    assertSame 0 "`stat -c '%s' $GRID_SECURITY_DIR/voms-grid-mapfile`"
+    assertSame 0 "`stat -c '%s' $GRID_SECURITY_DIR/groupmapfile`"
 }
 
 testVomses() {
@@ -143,7 +143,7 @@ testDeconfigureVO() {
     assertTrue 'ops.conf not renamed to ops.conf-disabled' \
 	"[ -e $CONFDIR/vos/ops.conf-disabled -a ! -e $CONFDIR/vos/ops.conf ]"
     $VOSUPPORT remove-module gridmapdir.sh || fail "remove-module gridmapdir.sh failed"
-    assertSame "`ls $GRID_SECURITY_DIR/gridmapdir/ | grep ops`" ""
+    assertSame "" "`ls $GRID_SECURITY_DIR/gridmapdir/ | grep ops`"
     assertTrue "ops lcgadmin role not removed from voms-grid-mapfile" \
 	"! grep -q '\"/ops/Role=lcgadmin\"' $GRID_SECURITY_DIR/voms-grid-mapfile"
     assertTrue "ops pilot role not removed from voms-grid-mapfile" \
