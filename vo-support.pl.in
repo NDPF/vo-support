@@ -314,8 +314,8 @@ possibly destroy manual modifications to the configuration.
 # first argument is the name of the module
 # second argument is the action "configure"/"deconfigure"
 sub runmodule {
-  my $module = shift;
-  my $action = shift;
+  my $module = shift or pod2usage("run-module: no module name was given.");
+  my $action = shift or pod2usage("run-module: no action was specified.");
   die "Illegal action: $action" if $action !~ /^(de)?configure$/;
   my $modpath = "$sharedir/modules/$module";
   return 0 unless -e $modpath;
