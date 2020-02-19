@@ -313,6 +313,15 @@
   The vo-config and vo-support scripts are written in Perl, and depend
   on the perl module Site::Configuration::VO.
 
+* Getting the VO ID Card as XML
+
+  Downloading the EGI VO info can be done through the portal; visit
+  https://operations-portal.egi.eu/vo/search and click on the action
+  menu button on the right to download the voIDCard (called XML
+  feed). To get all the VO information, use [[http://operations-portal.egi.eu/xml/voIDCard/public/all][this URL]]. This is not
+  advertised so it may change or disappear in the future.
+
+  
 * Licensing and copyright
 
   This software is Copyright 2012, 2013 De Stichting voor Fundamenteel
