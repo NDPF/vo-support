@@ -17,7 +17,7 @@
 
 Summary: Virtual Organisation support for Grid services
 Name: vo-support
-Version: 0.3
+Version: 0.6
 Release: 1
 License: APL 2.0
 Group: System Environment/Base
@@ -111,51 +111,45 @@ rm -rf $RPM_BUILD_ROOT
 %files
 %defattr(-,root,root,-)
 %doc LICENSE Changes
-%{_datadir}/%{name}/modules
 %{_sbindir}/vo-config
 %{_sbindir}/vo-support
+%{_datadir}/%{name}/scriptlets/maintainerscript-helpers.sh
 %{_mandir}/man1/vo-config.1*
 %{_mandir}/man1/vo-support.1*
 %dir %{_datadir}/%{name}/vos
-%dir %{_datadir}/%{name}/triggers/install
-%dir %{_datadir}/%{name}/triggers/remove
+%dir %{_datadir}/%{name}/modules
 
 %files vomsdir
 %defattr(-,root,root,-)
-%{_datadir}/vo-support/triggers/install/vomsdir.sh
-%{_datadir}/vo-support/triggers/remove/vomsdir.sh
+%{_datadir}/vo-support/modules/vomsdir.sh
 
 %files vomses
 %defattr(-,root,root,-)
-%{_datadir}/vo-support/triggers/install/vomses.sh
-%{_datadir}/vo-support/triggers/remove/vomses.sh
+%{_datadir}/vo-support/modules/vomses.sh
 
 %files gridmapdir
 %defattr(-,root,root,-)
-%{_datadir}/vo-support/triggers/install/gridmapdir.sh
-%{_datadir}/vo-support/triggers/remove/gridmapdir.sh
+%{_datadir}/vo-support/modules/gridmapdir.sh
 
 %files gridmapfile
 %defattr(-,root,root,-)
-%{_datadir}/vo-support/triggers/install/grid-mapfile.sh
-%{_datadir}/vo-support/triggers/remove/grid-mapfile.sh
-
+%{_datadir}/vo-support/modules/grid-mapfile.sh
 
 %post vomsdir
 # add all VOs currently supported
 if [ $1 -ge 1 ]; then
-   if [ -e /usr/share/vo-support/modules/rpm-scriptlet-helpers.sh ]; then
-      . /usr/share/vo-support/modules/rpm-scriptlet-helpers.sh
-      add_trigger vomsdir.sh
+   if [ -e /usr/share/vo-support/scriptlets/maintainerscript-helpers.sh ]; then
+      . /usr/share/vo-support/scriptlets/maintainerscript-helpers.sh
+      add_module vomsdir.sh
    fi
 fi
 
 %preun vomsdir
 # remove all VOs currently supported
 if [ $1 -eq 0 ]; then
-   if [ -e /usr/share/vo-support/modules/rpm-scriptlet-helpers.sh ]; then
-      . /usr/share/vo-support/modules/rpm-scriptlet-helpers.sh
-      remove_trigger vomsdir.sh
+   if [ -e /usr/share/vo-support/scriptlets/maintainerscript-helpers.sh ]; then
+      . /usr/share/vo-support/scriptlets/maintainerscript-helpers.sh
+      remove_module vomsdir.sh
    fi
 fi
 
@@ -163,18 +157,18 @@ fi
 %post vomses
 # add all VOs currently supported
 if [ $1 -ge 1 ]; then
-   if [ -e /usr/share/vo-support/modules/rpm-scriptlet-helpers.sh ]; then
-      . /usr/share/vo-support/modules/rpm-scriptlet-helpers.sh
-      add_trigger vomses.sh
+   if [ -e /usr/share/vo-support/scriptlets/maintainerscript-helpers.sh ]; then
+      . /usr/share/vo-support/scriptlets/maintainerscript-helpers.sh
+      add_module vomses.sh
    fi
 fi
 
 %preun vomses
 # remove all VOs currently supported
 if [ $1 -eq 0 ]; then
-   if [ -e /usr/share/vo-support/modules/rpm-scriptlet-helpers.sh ]; then
-      . /usr/share/vo-support/modules/rpm-scriptlet-helpers.sh
-      remove_trigger vomses.sh
+   if [ -e /usr/share/vo-support/scriptlets/maintainerscript-helpers.sh ]; then
+      . /usr/share/vo-support/scriptlets/maintainerscript-helpers.sh
+      remove_module vomses.sh
    fi
 fi
 
@@ -182,36 +176,36 @@ fi
 %post gridmapdir
 # add all VOs currently supported
 if [ $1 -ge 1 ]; then
-   if [ -e /usr/share/vo-support/modules/rpm-scriptlet-helpers.sh ]; then
-      . /usr/share/vo-support/modules/rpm-scriptlet-helpers.sh
-      add_trigger gridmapdir.sh
+   if [ -e /usr/share/vo-support/scriptlets/maintainerscript-helpers.sh ]; then
+      . /usr/share/vo-support/scriptlets/maintainerscript-helpers.sh
+      add_module gridmapdir.sh
    fi
 fi
 
 %preun gridmapdir
 # remove all VOs currently supported
 if [ $1 -eq 0 ]; then
-   if [ -e /usr/share/vo-support/modules/rpm-scriptlet-helpers.sh ]; then
-      . /usr/share/vo-support/modules/rpm-scriptlet-helpers.sh
-      remove_trigger gridmapdir.sh
+   if [ -e /usr/share/vo-support/scriptlets/maintainerscript-helpers.sh ]; then
+      . /usr/share/vo-support/scriptlets/maintainerscript-helpers.sh
+      remove_module gridmapdir.sh
    fi
 fi
 
 %post gridmapfile
 # add all VOs currently supported
 if [ $1 -ge 1 ]; then
-   if [ -e /usr/share/vo-support/modules/rpm-scriptlet-helpers.sh ]; then
-      . /usr/share/vo-support/modules/rpm-scriptlet-helpers.sh
-      add_trigger grid-mapfile.sh
+   if [ -e /usr/share/vo-support/scriptlets/maintainerscript-helpers.sh ]; then
+      . /usr/share/vo-support/scriptlets/maintainerscript-helpers.sh
+      add_module grid-mapfile.sh
    fi
 fi
 
 %preun gridmapfile
 # remove all VOs currently supported
 if [ $1 -eq 0 ]; then
-   if [ -e /usr/share/vo-support/modules/rpm-scriptlet-helpers.sh ]; then
-      . /usr/share/vo-support/modules/rpm-scriptlet-helpers.sh
-      remove_trigger grid-mapfile.sh
+   if [ -e /usr/share/vo-support/scriptlets/maintainerscript-helpers.sh ]; then
+      . /usr/share/vo-support/scriptlets/maintainerscript-helpers.sh
+      remove_module grid-mapfile.sh
    fi
 fi
 
