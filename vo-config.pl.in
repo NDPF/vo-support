@@ -222,17 +222,17 @@ __END__
 
 =over
 
-=item 0
+=item B<0>
 
 On success
 
-=item 1
+=item B<1>
 
 The requested item wasn't found. This helps to disambiguate between
 an undefined parameter and a parameter that is explicitly set to the
 string "undefined".
 
-=item 2
+=item B<2>
 
 A fatal error occurred; either a command-line error or a corrupt
 configuration file.
